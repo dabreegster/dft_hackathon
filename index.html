@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>DfT connectivity hackathon prototype</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <script src="deps/maplibre-gl.js"></script>
+    <script src="deps/geojson-extent.js"></script>
+    <script src="deps/mapbox-gl-draw.js"></script>
+    <script type="module">
+      import { App } from "./app.js";
+
+      window.app = new App();
+    </script>
+    <link href="deps/maplibre-gl.css" rel="stylesheet" />
+    <link rel="stylesheet" href="deps/mapbox-gl-draw.css" type="text/css" />
+    <link rel="stylesheet" href="css/layout.css" type="text/css" />
+    <link rel="stylesheet" href="css/map_controls.css" type="text/css" />
+    <link rel="stylesheet" href="css/modal_popup.css" type="text/css" />
+  </head>
+
+  <body>
+    <aside id="sidebar">
+      <div class="sidebar-content content-container">
+        <h1>Insert cool stuff here</h1>
+      </div>
+
+      <div
+        class="sidebar-toggle rounded-rect"
+        onclick="document.getElementById('sidebar').classList.toggle('collapsed'); app.map.resize();"
+      >
+        &rarr;
+      </div>
+    </aside>
+
+    <main>
+      <div id="map">
+        <div id="basemaps-wrapper">
+          <select id="basemaps">
+            <option value="streets">Regular map</option>
+            <option value="hybrid">Satellite</option>
+          </select>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
