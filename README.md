@@ -1,7 +1,5 @@
 # DfT connectivity hackathon
 
-A very early prototype, without explanation. Go play with <https://acteng.github.io/atip>.
-
 ## Development
 
 Vanilla JS right now, no tooling. You need Python to run an example web server. Just run:
