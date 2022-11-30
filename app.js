@@ -242,20 +242,59 @@ export class App {
     contents += `<button type="button" id="recalculate">Recalculate scores</button>`;
     document.getElementById("form").innerHTML = contents;
 
-    document.getElementById("recalculate").onclick = async () => {
-      this.#callAPI(feature);
+    document.getElementById("recalculate").onclick = async (e) => {
+      e.target.disabled = true;
+      e.target.innerText = "Loading...";
+      try {
+        await this.#recalculate(feature);
+      } catch (err) {
+        e.target.innerText = `Error: ${err}`;
+      }
     };
   }
 
-  async #callAPI(feature) {
+  async #recalculate(feature) {
+    // First we need to snap each of the points to a valid stop
+    const endpt = "https://true-swans-flow-34-89-73-233.loca.lt";
+
+    console.log(JSON.stringify(feature.geometry));
+
+    var stops = [];
+    for (const pt of feature.geometry.coordinates) {
+      const req = {
+        lat_long: pt,
+        acceptable_distance: 1000,
+      };
+      console.log(JSON.stringify(req));
+      const resp = await fetch(endpt, {
+        method: "POST",
+        headers: {
+          "Bypass-Tunnel-Reminder": "haha",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(req),
+      });
+      const result = await resp.json();
+      if (!result.hasOwnProperty("ATCO")) {
+        throw `Stop lookup broke: ${JSON.stringify(
+          result
+        )} for req ${JSON.stringify(req)}`;
+      }
+
+      stops.append(result["ATCO"]);
+    }
+    console.log(`Got stops ${stops}`);
+
+    return this.#callAPI(feature, stops);
+  }
+
+  async #callAPI(feature, stops) {
     const realEndpt = "https://thick-humans-tap-34-89-73-233.loca.lt";
     const dummyEndpt = "https://free-rivers-glow-34-89-73-233.loca.lt";
 
     const startHours = 8;
     const dwellTime = 30;
-
-    // TODO Snap linestring to nearest ATC codes
-    const stops = ["0100AVONMTH0", "0100BHB0", "0100BRP90318"];
 
     const dailyTrips = 10;
 
