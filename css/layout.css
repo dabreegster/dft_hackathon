@@ -129,6 +129,7 @@ body > main {
   background-color: #fefefe;
   height: calc(100% - 60px);
   max-width: 1240px;
+  width: calc(100% - 60px);
   overflow: scroll;
   -webkit-animation-name: slideIn;
   -webkit-animation-duration: 0.4s;

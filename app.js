@@ -4,6 +4,81 @@ import { geojsonLength } from "./deps/geojson-length.js";
 ("use strict");
 
 export class App {
+  
+  #makeChartsCon(sub){
+  
+  var subpop = [
+      sub.Education_car,
+      sub.Business_car,
+      sub.Shopping_car,                        
+      sub.Education_walk,
+      sub.Business_pt,
+      sub.Education_pt,
+      sub.Visit_friends_at_private_home_car,
+      sub.Entertain_public_activity_car,
+      sub.Business_walk,
+      sub.Shopping_walk,
+      sub.Business_cycling,
+     sub.Education_cycling,
+     sub.Shopping_pt,
+     sub.Entertain_public_activity_pt,
+     sub.Visit_friends_at_private_home_pt,
+     sub.Shopping_cycling,
+     sub.Entertain_public_activity_walk,
+     sub.Visit_friends_at_private_home_walk,
+     sub.Entertain_public_activity_cycling,
+     sub.Visit_friends_at_private_home_cycling,
+     sub.overall,
+     sub.overall_walk,
+     sub.overall_car,
+     sub.overall_cycling,
+     sub.overall_pt,
+     sub.overall_business,
+     sub.overall_education,            
+     sub.overall_entertain,
+     sub.overall_shopping,                  
+    sub.overall_visit
+    ];
+  
+  // Connectivity Chart
+	if(this.conChart){
+		this.conChart.destroy();
+	}
+		
+	var conctx = document.getElementById('conChart').getContext('2d');
+	conChart = new Chart(conctx, {
+		type: 'bar',
+		data: {
+			labels: ['Education_car','Business_car','Shopping_car','Education_walk','Business_pt','Education_pt','Visit_friends_at_private_home_car','Entertain_public_activity_car','Business_walk','Shopping_walk','Business_cycling','Education_cycling','Shopping_pt','Entertain_public_activity_pt','Visit_friends_at_private_home_pt','Shopping_cycling','Entertain_public_activity_walk','Visit_friends_at_private_home_walk','Entertain_public_activity_cycling','Visit_friends_at_private_home_cycling','overall','overall_walk','overall_car','overall_cycling','overall_pt','overall_business','overall_education','overall_entertain','overall_shopping','overall_visit'],
+			datasets: [{
+				label: 'Connectivity',
+				data: subpop,
+				backgroundColor: 'rgba(255, 99, 132, 0.8)',
+				borderColor: 'rgba(255, 99, 132, 1)',
+				borderWidth: 1
+			}]
+		},
+		options: {
+		  legend: {position: 'bottom'},
+			scales: {
+				yAxes: [{
+				  scaleLabel: {
+            display: true,
+            labelString: 'Connectivity Score'
+          },
+					ticks: {
+						beginAtZero: true
+					}
+				}]
+			},
+			responsive: true,
+			maintainAspectRatio: false
+		}
+	});
+	
+};
+  
+  
   constructor() {
     this.map = new maplibregl.Map({
       container: "map",
@@ -58,7 +133,9 @@ export class App {
         if (f.length == 1) {
           modal.style.display = "block";
           var sub = e.features[0].properties;
-        }
+          this.#makeChartsCon(sub);
+  
+        } 
       }
     });
   }
@@ -225,3 +302,4 @@ export class App {
     console.log(text);
   }
 }
+
