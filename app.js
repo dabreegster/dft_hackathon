@@ -25,6 +25,20 @@ export class App {
       this.map.addControl(this.drawControls);
       this.map.addControl(new maplibregl.ScaleControl());
       this.map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+
+      this.map.addSource("naptan_stops", {
+        type: "geojson",
+        data: "/data/naptan_stops.geojson"
+      });
+      this.map.addLayer({
+        id: "naptan_stops_layer",
+        type: "circle",
+        source: "naptan_stops",
+        paint: {
+          "circle-radius": 4,
+          "circle-color": "red",
+        }
+       });
     });
 
     document.getElementById("basemaps").onchange = (e) => {
