@@ -33,6 +33,15 @@
 
     <main>
       <div id="map">
+        <div id="layer-toggle">
+          <form action="/action_page.php">
+            <input type="checkbox" id="lsoa" name="lsoacheck" value="Bike">
+            <label for="lsoacheck"> LSOAs</label><br>
+            <input type="checkbox" id="stops" name="stopscheck" value="Car">
+            <label for="stopscheck"> Stops</label><br>
+          </form>
+        </div>
+        
         <div id="basemaps-wrapper">
           <select id="basemaps">
             <option value="streets">Regular map</option>
