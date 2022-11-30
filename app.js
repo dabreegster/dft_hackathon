@@ -442,19 +442,18 @@ export class App {
     ]) {
       for (const [key, value] of Object.entries(data[`${purpose}_diff`])) {
         const lsoa = data.lsoa[key];
-        props_per_lsoa[lsoa][lsoa] = value;
+        props_per_lsoa[lsoa][purpose] = 100.0 * value;
       }
     }
+
+    console.log(JSON.stringify(props_per_lsoa));
 
     for (const feature of geojson.features) {
       const id = feature.properties["LSOA11CD"];
       feature.properties = props_per_lsoa[id];
     }
 
-    this.map.addSource("after", {
-      type: "geojson",
-      data: geojson,
-    });
+    this.map.getSource("after").setData(geojson);
 
     this.map.addLayer({
       id: "after_layer",
@@ -491,5 +490,8 @@ export class App {
         "fill-opacity": 0.7,
       },
     });
+
+    // Gets in the way
+    this.map.removeLayer("baseline_layer");
   }
 }
