@@ -229,7 +229,7 @@ export class App {
         source: "naptan_stops",
         paint: {
           "circle-radius": 5,
-          "circle-color": "blue",
+          "circle-color": "purple",
         },
       });
     } else {
