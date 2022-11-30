@@ -159,7 +159,7 @@ export class App {
         // Block Modal when clicking on other layers
         let f = this.map.queryRenderedFeatures(e.point);
         f = f.filter(function (el) {
-          return el.source != "composite";
+          return el.source == "baseline";
         });
 
         if (f.length == 1) {
