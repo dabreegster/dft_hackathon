@@ -48,21 +48,23 @@ export class App {
     
     // How map triggers the modal 
     // On click open modal
-    this.map.on('click', 'baseline_layer', function(e) {
+    this.map.on('click', 'baseline_layer', (e) => {
+      if(this.drawControls.getMode() == "simple_select"){
+        // Block Modal when clicking on other layers
+        let f = this.map.queryRenderedFeatures(e.point);
+        f = f.filter(function (el) {
+          return el.source != 'composite';
+        });
+        
+        if (f.length == 1) {
+          modal.style.display = "block";
+          var sub = e.features[0].properties;
+          
+  
+        } 
+      }
       
-      // Block Modal when clicking on other layers
-      //let f = this.map.queryRenderedFeatures(e.point);
-      //f = f.filter(function (el) {
-      //  return el.source != 'composite';
-      //});
       
-      //if (f.length == 1) {
-        modal.style.display = "block";
-        var sub = e.features[0].properties;
-        
-        
-        
-      //} 
     	
     });
     
