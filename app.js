@@ -122,5 +122,58 @@ export class App {
     );
     contents += `<button type="button" id="recalculate">Recalculate scores</button>`;
     document.getElementById("form").innerHTML = contents;
+
+    document.getElementById("recalculate").onclick = async () => {
+      this.#callAPI(feature);
+    };
+  }
+
+  async #callAPI(feature) {
+    const realEndpt = "https://thick-humans-tap-34-89-73-233.loca.lt";
+    const dummyEndpt = "https://free-rivers-glow-34-89-73-233.loca.lt";
+
+    const startHours = 8;
+    const dwellTime = 30;
+
+    // TODO Snap linestring to nearest ATC codes
+    const stops = ["0100AVONMTH0", "0100BHB0", "0100BRP90318"];
+
+    const dailyTrips = 10;
+
+    var req = {
+      route_number: {},
+      trip_id: {},
+      ATC0: {},
+      stop_sequence: {},
+      arrival_time: {},
+      departure_time: {},
+      TripStartHours: startHours,
+      max_travel_time: 3600,
+      return_home: false,
+      geography_level: "lsoa",
+    };
+
+    var lastTime = 3600 * startHours;
+    for (var i = 0; i < dailyTrips * stops.length; i++) {
+      const key = `${i}`;
+
+      req.route_number[key] = 0;
+      req.trip_id[key] = Math.floor(i / stops.length);
+      req["ATC0"][key] = stops[i % stops.length];
+      req.stop_sequence[key] = i % stops.length;
+      req.arrival_time[key] = lastTime;
+      req.departure_time[key] = lastTime + dwellTime;
+
+      lastTime += dwellTime;
+      // TODO Time between stops
+      lastTime += 1800;
+    }
+
+    const resp = await fetch(dummyEndpt, {
+      method: "POST",
+      body: JSON.stringify(req),
+    });
+    const text = await resp.text();
+    console.log(text);
   }
 }
