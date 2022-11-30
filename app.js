@@ -4,108 +4,113 @@ import { geojsonLength } from "./deps/geojson-length.js";
 ("use strict");
 
 export class App {
-  
-  #makeChartsCon(sub){
-  
+  #makeChartsCon(sub) {
     var subcar = [
       sub.overall_car,
       sub.Business_car,
       sub.Education_car,
-      sub.Shopping_car,                        
+      sub.Shopping_car,
       sub.Visit_friends_at_private_home_car,
-      sub.Entertain_public_activity_car
+      sub.Entertain_public_activity_car,
     ];
-    
+
     var subwalk = [
       sub.overall_walk,
       sub.Business_walk,
       sub.Education_walk,
-      sub.Shopping_walk,                        
+      sub.Shopping_walk,
       sub.Visit_friends_at_private_home_walk,
-      sub.Entertain_public_activity_walk
+      sub.Entertain_public_activity_walk,
     ];
-    
+
     var subcycle = [
       sub.overall_cycling,
       sub.Business_cycling,
       sub.Education_cycling,
-      sub.Shopping_cycling,                        
+      sub.Shopping_cycling,
       sub.Visit_friends_at_private_home_cycling,
-      sub.Entertain_public_activity_cycling
+      sub.Entertain_public_activity_cycling,
     ];
-    
-    
+
     var subpt = [
       sub.overall_pt,
       sub.Business_pt,
       sub.Education_pt,
-      sub.Shopping_pt,                        
+      sub.Shopping_pt,
       sub.Visit_friends_at_private_home_pt,
-      sub.Entertain_public_activity_pt
+      sub.Entertain_public_activity_pt,
     ];
-  
-  // Connectivity Chart
-	if(this.conChart){
-		this.conChart.destroy();
-	}
-		
-	var conctx = document.getElementById('conChart').getContext('2d');
-	
-	conChart = new Chart(conctx, {
-		type: 'bar',
-		data: {
-			labels: ['Overall', 'Business', 'Education', 'Shopping', 'Friends', 'Entertainment'],
-			datasets: [{
-				label: 'Car',
-				data: subcar,
-				backgroundColor: 'rgba(255, 99, 132, 0.8)',
-				borderColor: 'rgba(255, 99, 132, 1)',
-				borderWidth: 1
-			},
-			{
-				label: 'Walk',
-				data: subwalk,
-				backgroundColor: 'rgba(132, 99, 255, 0.8)',
-				borderColor: 'rgba(132, 99, 255, 1)',
-				borderWidth: 1
-			},
-			{
-				label: 'Bicycle',
-				data: subcycle,
-				backgroundColor: 'rgba(99, 255, 13, 0.8)',
-				borderColor: 'rgba(99, 255, 13, 1)',
-				borderWidth: 1
-			},
-				{
-				label: 'Public Transport',
-				data: subpt,
-				backgroundColor: 'rgba(152,78,163, 0.8)',
-				borderColor: 'rgba(152,78,163, 1)',
-				borderWidth: 1
-			}]
-		},
-		options: {
-		  legend: {position: 'bottom'},
-			scales: {
-				yAxes: [{
-				  scaleLabel: {
-            display: true,
-            labelString: 'Connectivity Score'
+
+    // Connectivity Chart
+    if (this.conChart) {
+      this.conChart.destroy();
+    }
+
+    var conctx = document.getElementById("conChart").getContext("2d");
+
+    conChart = new Chart(conctx, {
+      type: "bar",
+      data: {
+        labels: [
+          "Overall",
+          "Business",
+          "Education",
+          "Shopping",
+          "Friends",
+          "Entertainment",
+        ],
+        datasets: [
+          {
+            label: "Car",
+            data: subcar,
+            backgroundColor: "rgba(255, 99, 132, 0.8)",
+            borderColor: "rgba(255, 99, 132, 1)",
+            borderWidth: 1,
           },
-					ticks: {
-						beginAtZero: true
-					}
-				}]
-			},
-			responsive: true,
-			maintainAspectRatio: false
-		}
-	});
-	
-	
-};
-  
-  
+          {
+            label: "Walk",
+            data: subwalk,
+            backgroundColor: "rgba(132, 99, 255, 0.8)",
+            borderColor: "rgba(132, 99, 255, 1)",
+            borderWidth: 1,
+          },
+          {
+            label: "Bicycle",
+            data: subcycle,
+            backgroundColor: "rgba(99, 255, 13, 0.8)",
+            borderColor: "rgba(99, 255, 13, 1)",
+            borderWidth: 1,
+          },
+          {
+            label: "Public Transport",
+            data: subpt,
+            backgroundColor: "rgba(152,78,163, 0.8)",
+            borderColor: "rgba(152,78,163, 1)",
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        legend: { position: "bottom" },
+        scales: {
+          yAxes: [
+            {
+              scaleLabel: {
+                display: true,
+                labelString: "Connectivity Score",
+              },
+              ticks: {
+                beginAtZero: true,
+              },
+            },
+          ],
+        },
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  }
+
   constructor() {
     this.map = new maplibregl.Map({
       container: "map",
@@ -161,8 +166,7 @@ export class App {
           modal.style.display = "block";
           var sub = e.features[0].properties;
           this.#makeChartsCon(sub);
-  
-        } 
+        }
       }
     });
   }
@@ -230,6 +234,13 @@ export class App {
         type: "geojson",
         data: "/data/lsoa_scores.geojson",
       });
+      this.map.addSource("after", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: [],
+        },
+      });
 
       this.#SetupLSOALayer(document.getElementById("layer-lsoa").value);
     });
@@ -284,15 +295,13 @@ export class App {
     // First we need to snap each of the points to a valid stop
     const endpt = "https://true-swans-flow-34-89-73-233.loca.lt";
 
-    console.log(JSON.stringify(feature.geometry));
-
     var stops = [];
     for (const pt of feature.geometry.coordinates) {
       const req = {
         lat_long: [pt[1], pt[0]],
         acceptable_distance: 1000,
       };
-      console.log(JSON.stringify(req));
+      console.log(`Lookup stop ${JSON.stringify(req)}`);
       const resp = await fetch(endpt, {
         method: "POST",
         headers: {
@@ -354,7 +363,7 @@ export class App {
       lastTime += 1800;
     }
 
-    console.log(JSON.stringify(req));
+    console.log(`Make real request ${JSON.stringify(req)}`);
     const resp = await fetch(dummyEndpt, {
       method: "POST",
       headers: {
@@ -364,10 +373,28 @@ export class App {
       },
       body: JSON.stringify(req),
     });
-    const text = await resp.text();
-    console.log(text);
-    // TODO Debugging
-    window.resp = JSON.parse(text);
+    const data = await resp.json();
+    this.#handleResults(data);
+  }
+
+  #handleResults(data) {
+    for (const purpose of [
+      "Business",
+      "Education",
+      "Entertain / public activity",
+      "Shopping",
+      "Visit friends at private home",
+      "overall",
+    ]) {
+      // Do the LSOA lookup
+      var diff = {};
+      for (const [key, value] of Object.entries(data[`${purpose}_diff`])) {
+        const lsoa = data.lsoa[key];
+        diff[lsoa] = value;
+      }
+      console.log(`diff for ${purpose} is ${JSON.stringify(diff)}`);
+
+      //this.map.getSource("after").setData({});
+    }
   }
 }
-
