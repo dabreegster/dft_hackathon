@@ -47,8 +47,47 @@ export class App {
         type: "circle",
         source: "naptan_stops",
         paint: {
-          "circle-radius": 4,
-          "circle-color": "red",
+          "circle-radius": 5,
+          "circle-color": "blue",
+        },
+      });
+
+      this.map.addSource("baseline", {
+        type: "geojson",
+        data: "/data/lsoa_scores.geojson",
+      });
+      this.map.addLayer({
+        id: "baseline_layer",
+        source: "baseline",
+        type: "fill",
+        // From https://github.com/creds2/CarbonCalculator/blob/master/www/js/layer_control.js
+        paint: {
+          "fill-color": [
+            "interpolate",
+            ["linear"],
+            //["-", 100.0, ["get", "overall"]],
+            ["get", "overall"],
+            20,
+            "#800026",
+            30,
+            "#bd0026",
+            40,
+            "#e31a1c",
+            50,
+            "#fc4e2a",
+            60,
+            "#fd8d3c",
+            70,
+            "#feb24c",
+            80,
+            "#fed976",
+            90,
+            "#ffeda0",
+            100,
+            "#ffffcc",
+          ],
+          "fill-outline-color": "rgba(0, 0, 0, 0.2)",
+          "fill-opacity": 0.7,
         },
       });
     });
