@@ -172,42 +172,75 @@ export class App {
   }
 
   #SetupLSOALayer(layerId) {
-    if (this.map.getLayer("baseline_layer"))
+    var lsoacheckBox = document.getElementById('lsoacheck');
+    
+    if (lsoacheckBox.checked === true){
+      console.log("Hi - checked")
+      if (this.map.getLayer("baseline_layer"))
       this.map.removeLayer("baseline_layer");
-    this.map.addLayer({
-      id: "baseline_layer",
-      source: "baseline",
-      type: "fill",
-      // From https://github.com/creds2/CarbonCalculator/blob/master/www/js/layer_control.js
-      paint: {
-        "fill-color": [
-          "interpolate",
-          ["linear"],
-          //["-", 100.0, ["get", "overall"]],
-          ["get", layerId],
-          20,
-          "#800026",
-          30,
-          "#bd0026",
-          40,
-          "#e31a1c",
-          50,
-          "#fc4e2a",
-          60,
-          "#fd8d3c",
-          70,
-          "#feb24c",
-          80,
-          "#fed976",
-          90,
-          "#ffeda0",
-          100,
-          "#ffffcc",
-        ],
-        "fill-outline-color": "rgba(0, 0, 0, 0.2)",
-        "fill-opacity": 0.7,
-      },
-    });
+      this.map.addLayer({
+        id: "baseline_layer",
+        source: "baseline",
+        type: "fill",
+        // From https://github.com/creds2/CarbonCalculator/blob/master/www/js/layer_control.js
+        paint: {
+          "fill-color": [
+            "interpolate",
+            ["linear"],
+            //["-", 100.0, ["get", "overall"]],
+            ["get", layerId],
+            10,
+            "#67001f",
+            20,
+            "#b2182b",
+            30,
+            "#d6604d",
+            40,
+            "#f4a582",
+            50,
+            "#fddbc7",
+            60,
+            "#d1e5f0",
+            70,
+            "#92c5de",
+            80,
+            "#4393c3",
+            90,
+            "#2166ac",
+            100,
+            "#053061",
+          ],
+          "fill-outline-color": "rgba(0, 0, 0, 0.2)",
+          "fill-opacity": 0.7,
+        },
+      });
+    } else {
+      if (this.map.getLayer("baseline_layer"))
+      this.map.removeLayer("baseline_layer");
+    }
+    
+  }
+
+  #SetupstopsLayer() {
+    var stopscheckBox = document.getElementById('stopscheck');
+    
+    if (stopscheckBox.checked === true){
+      
+      this.map.addLayer({
+        id: "naptan_stops_layer",
+        type: "circle",
+        source: "naptan_stops",
+        paint: {
+          "circle-radius": 5,
+          "circle-color": "blue",
+        },
+      });
+    } else {
+      if (this.map.getLayer("naptan_stops_layer"))
+      this.map.removeLayer("naptan_stops_layer");
+    }
+    
+    
   }
 
   #setupMap(setCamera) {
@@ -220,15 +253,7 @@ export class App {
         type: "geojson",
         data: "/data/naptan_stops.geojson",
       });
-      this.map.addLayer({
-        id: "naptan_stops_layer",
-        type: "circle",
-        source: "naptan_stops",
-        paint: {
-          "circle-radius": 5,
-          "circle-color": "blue",
-        },
-      });
+      
 
       this.map.addSource("baseline", {
         type: "geojson",
@@ -243,6 +268,7 @@ export class App {
       });
 
       this.#SetupLSOALayer(document.getElementById("layer-lsoa").value);
+      this.#SetupstopsLayer();
     });
 
     this.map.on("draw.create", (e) => {
@@ -257,6 +283,14 @@ export class App {
 
     document.getElementById("layer-lsoa").onchange = (e) => {
       this.#SetupLSOALayer(document.getElementById("layer-lsoa").value);
+    };
+
+    document.getElementById("lsoacheck").onchange = (e) => {
+      this.#SetupLSOALayer(document.getElementById("layer-lsoa").value);
+    };
+    
+    document.getElementById("stopscheck").onchange = (e) => {
+      this.#SetupstopsLayer();
     };
   }
 
