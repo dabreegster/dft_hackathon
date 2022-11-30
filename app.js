@@ -30,6 +30,80 @@ export class App {
     });
 
     this.#setupMap();
+    
+    // Modal Popup
+    this.modal = document.getElementById("modal");
+    this.span = document.getElementsByClassName("close")[0];
+    // When the user clicks on <span> (x), close the modal
+    this.span.onclick = function() {
+      modal.style.display = "none";
+    };
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+    	modal.style.display = "none";
+      }
+    };
+    
+    
+    // How map triggers the modal 
+    // On click open modal
+    this.map.on('click', 'baseline_layer', function(e) {
+      
+      // Block Modal when clicking on other layers
+      //let f = this.map.queryRenderedFeatures(e.point);
+      //f = f.filter(function (el) {
+      //  return el.source != 'composite';
+      //});
+      
+      //if (f.length == 1) {
+        modal.style.display = "block";
+        var sub = e.features[0].properties;
+        
+        
+        
+      //} 
+    	
+    });
+    
+  }
+  
+  #SetupLSOALayer(layerId) {
+    if (this.map.getLayer('baseline_layer')) this.map.removeLayer('baseline_layer');
+    this.map.addLayer({
+      id: "baseline_layer",
+      source: "baseline",
+      type: "fill",
+      // From https://github.com/creds2/CarbonCalculator/blob/master/www/js/layer_control.js
+      paint: {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          //["-", 100.0, ["get", "overall"]],
+          ["get", layerId],
+          20,
+          "#800026",
+          30,
+          "#bd0026",
+          40,
+          "#e31a1c",
+          50,
+          "#fc4e2a",
+          60,
+          "#fd8d3c",
+          70,
+          "#feb24c",
+          80,
+          "#fed976",
+          90,
+          "#ffeda0",
+          100,
+          "#ffffcc",
+        ],
+        "fill-outline-color": "rgba(0, 0, 0, 0.2)",
+        "fill-opacity": 0.7,
+      },
+    });
   }
 
   #setupMap(setCamera) {
@@ -56,51 +130,24 @@ export class App {
         type: "geojson",
         data: "/data/lsoa_scores.geojson",
       });
-      this.map.addLayer({
-        id: "baseline_layer",
-        source: "baseline",
-        type: "fill",
-        // From https://github.com/creds2/CarbonCalculator/blob/master/www/js/layer_control.js
-        paint: {
-          "fill-color": [
-            "interpolate",
-            ["linear"],
-            //["-", 100.0, ["get", "overall"]],
-            ["get", "overall"],
-            20,
-            "#800026",
-            30,
-            "#bd0026",
-            40,
-            "#e31a1c",
-            50,
-            "#fc4e2a",
-            60,
-            "#fd8d3c",
-            70,
-            "#feb24c",
-            80,
-            "#fed976",
-            90,
-            "#ffeda0",
-            100,
-            "#ffffcc",
-          ],
-          "fill-outline-color": "rgba(0, 0, 0, 0.2)",
-          "fill-opacity": 0.7,
-        },
-      });
+      
+      this.#SetupLSOALayer(document.getElementById("layer-lsoa").value);
     });
 
     this.map.on("draw.create", (e) => {
       this.#newRoute(e.features[0]);
     });
-
+    
     document.getElementById("basemaps").onchange = (e) => {
       this.map.setStyle(
         `https://api.maptiler.com/maps/${e.target.value}/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL`
       );
+    }
+    
+    document.getElementById("layer-lsoa").onchange = (e) => {
+      this.#SetupLSOALayer(document.getElementById("layer-lsoa").value);
     };
+    
   }
 
   #newRoute(feature) {
@@ -176,4 +223,8 @@ export class App {
     const text = await resp.text();
     console.log(text);
   }
+  
+  
+  
 }
+
