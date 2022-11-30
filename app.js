@@ -392,7 +392,7 @@ export class App {
     }
 
     console.log(`Make real request ${JSON.stringify(req)}`);
-    const resp = await fetch(dummyEndpt, {
+    const resp = await fetch(realEndpt, {
       method: "POST",
       headers: {
         "Bypass-Tunnel-Reminder": "haha",
@@ -431,6 +431,9 @@ export class App {
       };
     }
 
+    var min = Number.MAX_VALUE;
+    var max = Number.MIN_VALUE;
+
     // Go through and fill out properties in the LSOA polygons
     for (const purpose of [
       "Business",
@@ -442,11 +445,14 @@ export class App {
     ]) {
       for (const [key, value] of Object.entries(data[`${purpose}_diff`])) {
         const lsoa = data.lsoa[key];
-        props_per_lsoa[lsoa][purpose] = 100.0 * value;
+        props_per_lsoa[lsoa][purpose] = value;
+        min = Math.min(min, value);
+        max = Math.max(max, value)
       }
     }
 
     console.log(JSON.stringify(props_per_lsoa));
+    console.log(`Diff ranges from ${min} to ${max}`);
 
     for (const feature of geojson.features) {
       const id = feature.properties["LSOA11CD"];
@@ -460,34 +466,10 @@ export class App {
       source: "after",
       type: "fill",
       paint: {
-        "fill-color": [
-          "interpolate",
-          ["linear"],
-          // TODO Fixed
-          ["get", "overall"],
-          10,
-          "#67001f",
-          20,
-          "#b2182b",
-          30,
-          "#d6604d",
-          40,
-          "#f4a582",
-          50,
-          "#fddbc7",
-          60,
-          "#d1e5f0",
-          70,
-          "#92c5de",
-          80,
-          "#4393c3",
-          90,
-          "#2166ac",
-          100,
-          "#053061",
-        ],
-        "fill-outline-color": "rgba(0, 0, 0, 0.2)",
-        "fill-opacity": 0.7,
+        "fill-color": "green",
+        "fill-opacity": ["get", "overall"],
+        "fill-outline-color": "black",
+        "fill-opacity": 0.5,
       },
     });
 
