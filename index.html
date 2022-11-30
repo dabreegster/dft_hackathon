@@ -7,6 +7,7 @@
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
     />
     <script src="deps/maplibre-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
     <script src="deps/geojson-extent.js"></script>
     <script src="deps/mapbox-gl-draw.js"></script>
     <link href="deps/maplibre-gl.css" rel="stylesheet" />
@@ -84,7 +85,11 @@
           <div id="modal-title"><h2>Area Summary</h2></div>
       </div>
       <div class="modal-body">
-        <p>CONTENT</p>
+        <p>Chart</p>
+        <div class="chart-container" >
+  			  <canvas id="conChart"></canvas>
+  		  </div>
+        
       </div>
       <div class="modal-footer"></div>
       
