@@ -262,7 +262,7 @@ export class App {
     var stops = [];
     for (const pt of feature.geometry.coordinates) {
       const req = {
-        lat_long: pt,
+        lat_long: [pt[1], pt[0]],
         acceptable_distance: 1000,
       };
       console.log(JSON.stringify(req));
@@ -282,7 +282,7 @@ export class App {
         )} for req ${JSON.stringify(req)}`;
       }
 
-      stops.append(result["ATCO"]);
+      stops.push(result["ATCO"]);
     }
     console.log(`Got stops ${stops}`);
 
@@ -339,6 +339,8 @@ export class App {
     });
     const text = await resp.text();
     console.log(text);
+    // TODO Debugging
+    window.resp = JSON.parse(text);
   }
 }
 
