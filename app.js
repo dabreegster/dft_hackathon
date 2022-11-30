@@ -1,4 +1,7 @@
-"use strict";
+import { dropdown } from "./forms.js";
+import { geojsonLength } from "./deps/geojson-length.js";
+
+("use strict");
 
 export class App {
   constructor() {
@@ -50,10 +53,35 @@ export class App {
       });
     });
 
+    this.map.on("draw.create", (e) => {
+      this.#newRoute(e.features[0]);
+    });
+
     document.getElementById("basemaps").onchange = (e) => {
       this.map.setStyle(
         `https://api.maptiler.com/maps/${e.target.value}/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL`
       );
     };
+  }
+
+  #newRoute(feature) {
+    const length = Math.round(geojsonLength(feature.geometry));
+
+    var contents = "";
+    contents += `<h2>Length of route: ${length} meters</h2>`;
+    contents += dropdown(
+      feature.properties,
+      "speed",
+      "Speed of the train (km/h): ",
+      [100, 150, 200]
+    );
+    contents += dropdown(
+      feature.properties,
+      "frequency",
+      "Peak frequency the train (km/h): ",
+      [100, 150, 200]
+    );
+    contents += `<button type="button" id="recalculate">Recalculate scores</button>`;
+    document.getElementById("form").innerHTML = contents;
   }
 }
