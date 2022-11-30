@@ -11,10 +11,19 @@ export class App {
     this.drawControls = new MapboxDraw({
       displayControlsDefault: false,
       controls: {
-        point: true,
-        polygon: true,
         line_string: true,
       },
+      styles: [
+        {
+          id: "lines",
+          filter: ["==", "$type", "LineString"],
+          type: "line",
+          paint: {
+            "line-color": "black",
+            "line-width": 10,
+          },
+        },
+      ],
     });
 
     this.#setupMap();
@@ -28,7 +37,7 @@ export class App {
 
       this.map.addSource("naptan_stops", {
         type: "geojson",
-        data: "/data/naptan_stops.geojson"
+        data: "/data/naptan_stops.geojson",
       });
       this.map.addLayer({
         id: "naptan_stops_layer",
@@ -37,8 +46,8 @@ export class App {
         paint: {
           "circle-radius": 4,
           "circle-color": "red",
-        }
-       });
+        },
+      });
     });
 
     document.getElementById("basemaps").onchange = (e) => {
