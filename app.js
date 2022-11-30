@@ -30,48 +30,42 @@ export class App {
     });
 
     this.#setupMap();
-    
+
     // Modal Popup
     this.modal = document.getElementById("modal");
     this.span = document.getElementsByClassName("close")[0];
     // When the user clicks on <span> (x), close the modal
-    this.span.onclick = function() {
+    this.span.onclick = function () {
       modal.style.display = "none";
     };
     // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
+    window.onclick = function (event) {
       if (event.target == modal) {
-    	modal.style.display = "none";
+        modal.style.display = "none";
       }
     };
-    
-    
-    // How map triggers the modal 
+
+    // How map triggers the modal
     // On click open modal
-    this.map.on('click', 'baseline_layer', (e) => {
-      if(this.drawControls.getMode() == "simple_select"){
+    this.map.on("click", "baseline_layer", (e) => {
+      if (this.drawControls.getMode() == "simple_select") {
         // Block Modal when clicking on other layers
         let f = this.map.queryRenderedFeatures(e.point);
         f = f.filter(function (el) {
-          return el.source != 'composite';
+          return el.source != "composite";
         });
-        
+
         if (f.length == 1) {
           modal.style.display = "block";
           var sub = e.features[0].properties;
-          
-  
-        } 
+        }
       }
-      
-      
-    	
     });
-    
   }
-  
+
   #SetupLSOALayer(layerId) {
-    if (this.map.getLayer('baseline_layer')) this.map.removeLayer('baseline_layer');
+    if (this.map.getLayer("baseline_layer"))
+      this.map.removeLayer("baseline_layer");
     this.map.addLayer({
       id: "baseline_layer",
       source: "baseline",
@@ -132,24 +126,23 @@ export class App {
         type: "geojson",
         data: "/data/lsoa_scores.geojson",
       });
-      
+
       this.#SetupLSOALayer(document.getElementById("layer-lsoa").value);
     });
 
     this.map.on("draw.create", (e) => {
       this.#newRoute(e.features[0]);
     });
-    
+
     document.getElementById("basemaps").onchange = (e) => {
       this.map.setStyle(
         `https://api.maptiler.com/maps/${e.target.value}/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL`
       );
-    }
-    
+    };
+
     document.getElementById("layer-lsoa").onchange = (e) => {
       this.#SetupLSOALayer(document.getElementById("layer-lsoa").value);
     };
-    
   }
 
   #newRoute(feature) {
@@ -192,10 +185,10 @@ export class App {
     var req = {
       route_number: {},
       trip_id: {},
-      ATC0: {},
+      ATCO: {},
       stop_sequence: {},
-      arrival_time: {},
-      departure_time: {},
+      arrival_times: {},
+      departure_times: {},
       TripStartHours: startHours,
       max_travel_time: 3600,
       return_home: false,
@@ -208,25 +201,27 @@ export class App {
 
       req.route_number[key] = 0;
       req.trip_id[key] = Math.floor(i / stops.length);
-      req["ATC0"][key] = stops[i % stops.length];
+      req["ATCO"][key] = stops[i % stops.length];
       req.stop_sequence[key] = i % stops.length;
-      req.arrival_time[key] = lastTime;
-      req.departure_time[key] = lastTime + dwellTime;
+      req.arrival_times[key] = lastTime;
+      req.departure_times[key] = lastTime + dwellTime;
 
       lastTime += dwellTime;
       // TODO Time between stops
       lastTime += 1800;
     }
 
+    console.log(JSON.stringify(req));
     const resp = await fetch(dummyEndpt, {
       method: "POST",
+      headers: {
+        "Bypass-Tunnel-Reminder": "haha",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(req),
     });
     const text = await resp.text();
     console.log(text);
   }
-  
-  
-  
 }
-
