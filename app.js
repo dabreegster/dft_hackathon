@@ -172,12 +172,12 @@ export class App {
   }
 
   #SetupLSOALayer(layerId) {
-    var lsoacheckBox = document.getElementById('lsoacheck');
-    
-    if (lsoacheckBox.checked === true){
-      console.log("Hi - checked")
-      if (this.map.getLayer("baseline_layer"))
-      this.map.removeLayer("baseline_layer");
+    var lsoacheckBox = document.getElementById("lsoacheck");
+
+    if (lsoacheckBox.checked === true) {
+      if (this.map.getLayer("baseline_layer")) {
+        this.map.removeLayer("baseline_layer");
+      }
       this.map.addLayer({
         id: "baseline_layer",
         source: "baseline",
@@ -214,18 +214,15 @@ export class App {
           "fill-opacity": 0.7,
         },
       });
-    } else {
-      if (this.map.getLayer("baseline_layer"))
+    } else if (this.map.getLayer("baseline_layer")) {
       this.map.removeLayer("baseline_layer");
     }
-    
   }
 
   #SetupstopsLayer() {
-    var stopscheckBox = document.getElementById('stopscheck');
-    
-    if (stopscheckBox.checked === true){
-      
+    var stopscheckBox = document.getElementById("stopscheck");
+
+    if (stopscheckBox.checked === true) {
       this.map.addLayer({
         id: "naptan_stops_layer",
         type: "circle",
@@ -237,10 +234,8 @@ export class App {
       });
     } else {
       if (this.map.getLayer("naptan_stops_layer"))
-      this.map.removeLayer("naptan_stops_layer");
+        this.map.removeLayer("naptan_stops_layer");
     }
-    
-    
   }
 
   #setupMap(setCamera) {
@@ -253,7 +248,6 @@ export class App {
         type: "geojson",
         data: "/data/naptan_stops.geojson",
       });
-      
 
       this.map.addSource("baseline", {
         type: "geojson",
@@ -288,7 +282,7 @@ export class App {
     document.getElementById("lsoacheck").onchange = (e) => {
       this.#SetupLSOALayer(document.getElementById("layer-lsoa").value);
     };
-    
+
     document.getElementById("stopscheck").onchange = (e) => {
       this.#SetupstopsLayer();
     };
@@ -408,10 +402,36 @@ export class App {
       body: JSON.stringify(req),
     });
     const data = await resp.json();
-    this.#handleResults(data);
+
+    // TODO Could do this once and stash it somewhere
+    const lsoas = await this.#loadLSOAs();
+
+    this.#handleResults(data, lsoas);
   }
 
-  #handleResults(data) {
+  async #loadLSOAs() {
+    const resp = await fetch("/data/lsoa_scores.geojson");
+    const geojson = await resp.json();
+    // Clear (almost) all of the properties
+    for (const feature of geojson.features) {
+      const id = feature.properties["LSOA11CD"];
+      feature.properties = {
+        LSOA11CD: id,
+      };
+    }
+    return geojson;
+  }
+
+  #handleResults(data, geojson) {
+    var props_per_lsoa = {};
+    for (const feature of geojson.features) {
+      const id = feature.properties["LSOA11CD"];
+      props_per_lsoa[id] = {
+        LSOA11CD: id,
+      };
+    }
+
+    // Go through and fill out properties in the LSOA polygons
     for (const purpose of [
       "Business",
       "Education",
@@ -420,15 +440,56 @@ export class App {
       "Visit friends at private home",
       "overall",
     ]) {
-      // Do the LSOA lookup
-      var diff = {};
       for (const [key, value] of Object.entries(data[`${purpose}_diff`])) {
         const lsoa = data.lsoa[key];
-        diff[lsoa] = value;
+        props_per_lsoa[lsoa][lsoa] = value;
       }
-      console.log(`diff for ${purpose} is ${JSON.stringify(diff)}`);
-
-      //this.map.getSource("after").setData({});
     }
+
+    for (const feature of geojson.features) {
+      const id = feature.properties["LSOA11CD"];
+      feature.properties = props_per_lsoa[id];
+    }
+
+    this.map.addSource("after", {
+      type: "geojson",
+      data: geojson,
+    });
+
+    this.map.addLayer({
+      id: "after_layer",
+      source: "after",
+      type: "fill",
+      paint: {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          // TODO Fixed
+          ["get", "overall"],
+          10,
+          "#67001f",
+          20,
+          "#b2182b",
+          30,
+          "#d6604d",
+          40,
+          "#f4a582",
+          50,
+          "#fddbc7",
+          60,
+          "#d1e5f0",
+          70,
+          "#92c5de",
+          80,
+          "#4393c3",
+          90,
+          "#2166ac",
+          100,
+          "#053061",
+        ],
+        "fill-outline-color": "rgba(0, 0, 0, 0.2)",
+        "fill-opacity": 0.7,
+      },
+    });
   }
 }
