@@ -1,3 +1,5 @@
+var prevChart = null;
+
 export function makeChartsCon(sub) {
   const subcar = [
     sub.overall_car,
@@ -37,7 +39,11 @@ export function makeChartsCon(sub) {
 
   const conctx = document.getElementById("conChart").getContext("2d");
 
-  new Chart(conctx, {
+  if (prevChart != null) {
+    prevChart.destroy();
+  }
+
+  prevChart = new Chart(conctx, {
     type: "bar",
     data: {
       labels: [
