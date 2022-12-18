@@ -1,4 +1,5 @@
 import { makeChartsCon } from "./area_summary.js";
+import { setupLSOALayer } from "./baseline_lsoa_scores.js";
 import { recalculateScores } from "./call_api.js";
 import { dropdown } from "./forms.js";
 import { geojsonLength } from "./deps/geojson-length.js";
@@ -36,16 +37,14 @@ export class App {
   }
 
   #setupChartModal() {
-    // Modal Popup
-    this.modal = document.getElementById("modal");
-    this.span = document.getElementsByClassName("close")[0];
+    const modal = document.getElementById("modal");
     // When the user clicks on <span> (x), close the modal
-    this.span.onclick = function () {
+    document.getElementsByClassName("close")[0].onclick = () => {
       modal.style.display = "none";
     };
     // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function (event) {
-      if (event.target == modal) {
+    window.onclick = (ev) => {
+      if (ev.target == modal) {
         modal.style.display = "none";
       }
     };
@@ -68,55 +67,7 @@ export class App {
     });
   }
 
-  #setupLSOALayer(layerId) {
-    var lsoacheckBox = document.getElementById("lsoacheck");
-
-    if (lsoacheckBox.checked === true) {
-      if (this.map.getLayer("baseline_layer")) {
-        this.map.removeLayer("baseline_layer");
-      }
-      this.map.addLayer({
-        id: "baseline_layer",
-        source: "baseline",
-        type: "fill",
-        // From https://github.com/creds2/CarbonCalculator/blob/master/www/js/layer_control.js
-        paint: {
-          "fill-color": [
-            "interpolate",
-            ["linear"],
-            //["-", 100.0, ["get", "overall"]],
-            ["get", layerId],
-            10,
-            "#67001f",
-            20,
-            "#b2182b",
-            30,
-            "#d6604d",
-            40,
-            "#f4a582",
-            50,
-            "#fddbc7",
-            60,
-            "#d1e5f0",
-            70,
-            "#92c5de",
-            80,
-            "#4393c3",
-            90,
-            "#2166ac",
-            100,
-            "#053061",
-          ],
-          "fill-outline-color": "rgba(0, 0, 0, 0.2)",
-          "fill-opacity": 0.7,
-        },
-      });
-    } else if (this.map.getLayer("baseline_layer")) {
-      this.map.removeLayer("baseline_layer");
-    }
-  }
-
-  #setupstopsLayer() {
+  #setupStopsLayer() {
     var stopscheckBox = document.getElementById("stopscheck");
 
     if (stopscheckBox.checked === true) {
@@ -158,8 +109,8 @@ export class App {
         },
       });
 
-      this.#setupLSOALayer(document.getElementById("layer-lsoa").value);
-      this.#setupstopsLayer();
+      setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
+      this.#setupStopsLayer();
     });
 
     this.map.on("draw.create", (e) => {
@@ -173,15 +124,14 @@ export class App {
     };
 
     document.getElementById("layer-lsoa").onchange = (e) => {
-      this.#setupLSOALayer(document.getElementById("layer-lsoa").value);
+      setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
     };
-
     document.getElementById("lsoacheck").onchange = (e) => {
-      this.#setupLSOALayer(document.getElementById("layer-lsoa").value);
+      setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
     };
 
     document.getElementById("stopscheck").onchange = (e) => {
-      this.#setupstopsLayer();
+      this.#setupStopsLayer();
     };
   }
 
