@@ -447,7 +447,7 @@ export class App {
         const lsoa = data.lsoa[key];
         props_per_lsoa[lsoa][purpose] = value;
         min = Math.min(min, value);
-        max = Math.max(max, value)
+        max = Math.max(max, value);
       }
     }
 
