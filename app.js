@@ -10,6 +10,7 @@ export class App {
   constructor() {
     this.map = new maplibregl.Map({
       container: "map",
+      // TODO Actually go get an API key!
       style:
         "https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
       hash: true,
@@ -36,43 +37,13 @@ export class App {
     this.#setupChartModal();
   }
 
-  #setupChartModal() {
-    const modal = document.getElementById("modal");
-    // When the user clicks on <span> (x), close the modal
-    document.getElementsByClassName("close")[0].onclick = () => {
-      modal.style.display = "none";
-    };
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = (ev) => {
-      if (ev.target == modal) {
-        modal.style.display = "none";
-      }
-    };
-
-    // How map triggers the modal
-    // On click open modal
-    this.map.on("click", "baseline_layer", (e) => {
-      if (this.drawControls.getMode() == "simple_select") {
-        // Block Modal when clicking on other layers
-        let f = this.map.queryRenderedFeatures(e.point);
-        f = f.filter(function (el) {
-          return el.source == "baseline";
-        });
-
-        if (f.length == 1) {
-          modal.style.display = "block";
-          makeChartsCon(e.features[0].properties);
-        }
-      }
-    });
-  }
-
   #setupMap(setCamera) {
     this.map.on("load", async () => {
       this.map.addControl(this.drawControls);
       this.map.addControl(new maplibregl.ScaleControl());
       this.map.addControl(new maplibregl.NavigationControl(), "bottom-right");
 
+      // These show scores per LSOA
       this.map.addSource("baseline", {
         type: "geojson",
         data: emptyGeojson(),
@@ -87,6 +58,7 @@ export class App {
       this.map.getSource("baseline").setData(baselineGeojson);
       // Also remember the geometry per LSOA, for creating the "after" layer later
       this.lsoaGeometry = lsoaGeometry;
+
       setupLSOALayer(this.map, document.getElementById("show-score").value);
       document.getElementById("show-score").onchange = (e) => {
         // We're changing the dropdown, so remove the old layer first
@@ -135,6 +107,38 @@ export class App {
     };
   }
 
+  #setupChartModal() {
+    const modal = document.getElementById("modal");
+    // When the user clicks on <span> (x), close the modal
+    document.getElementsByClassName("close")[0].onclick = () => {
+      modal.style.display = "none";
+    };
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = (ev) => {
+      if (ev.target == modal) {
+        modal.style.display = "none";
+      }
+    };
+
+    // How map triggers the modal
+    // On click open modal
+    this.map.on("click", "baseline_layer", (e) => {
+      if (this.drawControls.getMode() == "simple_select") {
+        // Block Modal when clicking on other layers
+        let f = this.map.queryRenderedFeatures(e.point);
+        f = f.filter(function (el) {
+          return el.source == "baseline";
+        });
+
+        if (f.length == 1) {
+          modal.style.display = "block";
+          makeChartsCon(e.features[0].properties);
+        }
+      }
+    });
+  }
+
+  // When the draw tool finishes, this gets called with the line-string created
   #newRoute(feature) {
     const length = Math.round(geojsonLength(feature.geometry));
 
@@ -155,18 +159,21 @@ export class App {
     contents += `<button type="button" id="recalculate">Recalculate scores</button>`;
     document.getElementById("form").innerHTML = contents;
 
+    // Javascript gotcha: getElementById for the button we just created above
+    // will ONLY work after the button has been added to the DOM. When we
+    // overwrite innerHTML above, that happens.
     document.getElementById("recalculate").onclick = async (e) => {
       e.target.disabled = true;
       e.target.innerText = "Loading...";
       try {
-        this.#handleResults(await recalculateScores(feature));
+        this.#handleApiResults(await recalculateScores(feature));
       } catch (err) {
         e.target.innerText = `Error: ${err}`;
       }
     };
   }
 
-  #handleResults(data) {
+  #handleApiResults(data) {
     var props_per_lsoa = {};
     for (const [id, _] of Object.entries(this.lsoaGeometry)) {
       props_per_lsoa[id] = {
@@ -208,6 +215,10 @@ export class App {
     }
     this.map.getSource("after").setData(geojson);
 
+    // TODO Figure out how to style this. Improvements should be green, lower
+    // scores red, nearly the same shouldn't show up at all. Exactly how this
+    // works probably depends on the relative scale of the change, which is why
+    // we debug min and max above
     this.map.addLayer({
       id: "after_layer",
       source: "after",
@@ -220,8 +231,11 @@ export class App {
       },
     });
 
-    // Gets in the way
-    this.map.removeLayer("baseline_layer");
+    // The baseline layer gets in the way.
+    // TODO After we've got this "after" source filled out, we need controls to
+    // toggle between showing the baseline data and the "after." And to wire up
+    // the score picker to "after."
+    this.map.setLayoutProperty("baseline_layer", "visibility", "none");
   }
 }
 

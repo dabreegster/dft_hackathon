@@ -5,6 +5,7 @@ export async function recalculateScores(feature) {
   var stops = [];
   for (const pt of feature.geometry.coordinates) {
     const req = {
+      // https://macwright.com/lonlat/
       lat_long: [pt[1], pt[0]],
       acceptable_distance: 1000,
     };
@@ -12,6 +13,7 @@ export async function recalculateScores(feature) {
     const resp = await fetch(endpt, {
       method: "POST",
       headers: {
+        // I don't remember why this was necessary
         "Bypass-Tunnel-Reminder": "haha",
         Accept: "application/json",
         "Content-Type": "application/json",
