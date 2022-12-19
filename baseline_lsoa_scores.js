@@ -1,3 +1,4 @@
+// Returns the baseline GeoJSON data and also a dictionary from LSOA ID to geometry
 export async function loadBaselineData() {
   const resp = await fetch("/data/lsoa_scores.geojson");
   const geojson = await resp.json();
