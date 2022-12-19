@@ -1,5 +1,5 @@
 import { makeChartsCon } from "./area_summary.js";
-import { setupLSOALayer } from "./baseline_lsoa_scores.js";
+import { loadBaselineData, setupLSOALayer } from "./baseline_lsoa_scores.js";
 import { recalculateScores } from "./call_api.js";
 import { dropdown } from "./forms.js";
 import { geojsonLength } from "./deps/geojson-length.js";
@@ -87,7 +87,7 @@ export class App {
   }
 
   #setupMap(setCamera) {
-    this.map.on("load", () => {
+    this.map.on("load", async () => {
       this.map.addControl(this.drawControls);
       this.map.addControl(new maplibregl.ScaleControl());
       this.map.addControl(new maplibregl.NavigationControl(), "bottom-right");
@@ -99,15 +99,16 @@ export class App {
 
       this.map.addSource("baseline", {
         type: "geojson",
-        data: "/data/lsoa_scores.geojson",
+        data: emptyGeojson(),
       });
       this.map.addSource("after", {
         type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: [],
-        },
+        data: emptyGeojson(),
       });
+
+      const [baselineGeojson, lsoaGeometry] = await loadBaselineData();
+      this.map.getSource("baseline").setData(baselineGeojson);
+      this.lsoaGeometry = lsoaGeometry;
 
       setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
       this.#setupStopsLayer();
@@ -159,18 +160,16 @@ export class App {
       e.target.disabled = true;
       e.target.innerText = "Loading...";
       try {
-        const [data, lsoas] = await recalculateScores(feature);
-        this.#handleResults(data, lsoas);
+        this.#handleResults(await recalculateScores(feature));
       } catch (err) {
         e.target.innerText = `Error: ${err}`;
       }
     };
   }
 
-  #handleResults(data, geojson) {
+  #handleResults(data) {
     var props_per_lsoa = {};
-    for (const feature of geojson.features) {
-      const id = feature.properties["LSOA11CD"];
+    for (const [id, _] of Object.entries(this.lsoaGeometry)) {
       props_per_lsoa[id] = {
         LSOA11CD: id,
       };
@@ -199,11 +198,15 @@ export class App {
     console.log(JSON.stringify(props_per_lsoa));
     console.log(`Diff ranges from ${min} to ${max}`);
 
-    for (const feature of geojson.features) {
-      const id = feature.properties["LSOA11CD"];
-      feature.properties = props_per_lsoa[id];
+    // Combine props_per_lsoa with lsoaGeometry to make GeoJSON again
+    var geojson = emptyGeojson();
+    for (const [id, props] of Object.entries(data[`${purpose}_diff`])) {
+      geojson.features.push({
+        type: "Feature",
+        properties: props,
+        geometry: this.lsoaGeometry[id],
+      });
     }
-
     this.map.getSource("after").setData(geojson);
 
     this.map.addLayer({
@@ -221,4 +224,11 @@ export class App {
     // Gets in the way
     this.map.removeLayer("baseline_layer");
   }
+}
+
+function emptyGeojson() {
+  return {
+    type: "FeatureCollection",
+    features: [],
+  };
 }

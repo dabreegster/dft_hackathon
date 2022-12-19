@@ -81,22 +81,5 @@ async function callAPI(feature, stops) {
     body: JSON.stringify(req),
   });
   const data = await resp.json();
-
-  // TODO Could do this once and stash it somewhere
-  const lsoas = await loadLSOAs();
-
-  return [data, lsoas];
-}
-
-async function loadLSOAs() {
-  const resp = await fetch("/data/lsoa_scores.geojson");
-  const geojson = await resp.json();
-  // Clear (almost) all of the properties
-  for (const feature of geojson.features) {
-    const id = feature.properties["LSOA11CD"];
-    feature.properties = {
-      LSOA11CD: id,
-    };
-  }
-  return geojson;
+  return data;
 }
