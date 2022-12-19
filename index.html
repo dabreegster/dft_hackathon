@@ -35,8 +35,13 @@
       <div id="map">
         <div id="layer-toggle">
           <form action="/action_page.php">
-            <input type="checkbox" id="lsoacheck" name="lsoacheck" checked />
-            <label for="lsoacheck">LSOAs</label><br />
+            <input
+              type="checkbox"
+              id="show-lsoa-scores"
+              name="show-lsoa-scores"
+              checked
+            />
+            <label for="show-lsoa-scores">LSOAs</label><br />
             <input type="checkbox" id="show-stops" name="show-stops" checked />
             <label for="show-stops">Stops</label><br />
           </form>
@@ -50,7 +55,7 @@
         </div>
 
         <div id="layer-select">
-          <select id="layer-lsoa">
+          <select id="show-score">
             <option value="Education_car">Education_car</option>
             <option value="Business_car">Business_car</option>
             <option value="Shopping_car">Shopping_car</option>

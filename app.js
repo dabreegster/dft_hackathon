@@ -87,12 +87,18 @@ export class App {
       this.map.getSource("baseline").setData(baselineGeojson);
       // Also remember the geometry per LSOA, for creating the "after" layer later
       this.lsoaGeometry = lsoaGeometry;
-      setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
-      document.getElementById("layer-lsoa").onchange = (e) => {
-        setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
+      setupLSOALayer(this.map, document.getElementById("show-score").value);
+      document.getElementById("show-score").onchange = (e) => {
+        // We're changing the dropdown, so remove the old layer first
+        this.map.removeLayer("baseline_layer");
+        setupLSOALayer(this.map, e.target.value);
       };
-      document.getElementById("lsoacheck").onchange = (e) => {
-        setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
+      document.getElementById("show-lsoa-scores").onchange = (e) => {
+        this.map.setLayoutProperty(
+          "baseline_layer",
+          "visibility",
+          e.target.checked ? "visible" : "none"
+        );
       };
 
       // Set up the bus stops layer
