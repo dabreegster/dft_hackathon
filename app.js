@@ -1,4 +1,4 @@
-import { makeChartsCon } from "./area_summary.js";
+import { makeBarChart } from "./area_summary.js";
 import { loadBaselineData, setupLSOALayer } from "./baseline_lsoa_scores.js";
 import { recalculateScores } from "./call_api.js";
 import { dropdown } from "./forms.js";
@@ -132,7 +132,7 @@ export class App {
 
         if (f.length == 1) {
           modal.style.display = "block";
-          makeChartsCon(e.features[0].properties);
+          makeBarChart(e.features[0].properties);
         }
       }
     });
