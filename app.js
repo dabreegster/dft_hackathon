@@ -67,35 +67,11 @@ export class App {
     });
   }
 
-  #setupStopsLayer() {
-    var stopscheckBox = document.getElementById("stopscheck");
-
-    if (stopscheckBox.checked === true) {
-      this.map.addLayer({
-        id: "naptan_stops_layer",
-        type: "circle",
-        source: "naptan_stops",
-        paint: {
-          "circle-radius": 5,
-          "circle-color": "purple",
-        },
-      });
-    } else {
-      if (this.map.getLayer("naptan_stops_layer"))
-        this.map.removeLayer("naptan_stops_layer");
-    }
-  }
-
   #setupMap(setCamera) {
     this.map.on("load", async () => {
       this.map.addControl(this.drawControls);
       this.map.addControl(new maplibregl.ScaleControl());
       this.map.addControl(new maplibregl.NavigationControl(), "bottom-right");
-
-      this.map.addSource("naptan_stops", {
-        type: "geojson",
-        data: "/data/naptan_stops.geojson",
-      });
 
       this.map.addSource("baseline", {
         type: "geojson",
@@ -106,13 +82,41 @@ export class App {
         data: emptyGeojson(),
       });
 
+      // Set up the per-LSOA scores baseline layer
       const [baselineGeojson, lsoaGeometry] = await loadBaselineData();
       this.map.getSource("baseline").setData(baselineGeojson);
+      // Also remember the geometry per LSOA, for creating the "after" layer later
       this.lsoaGeometry = lsoaGeometry;
-
       setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
-      this.#setupStopsLayer();
+      document.getElementById("layer-lsoa").onchange = (e) => {
+        setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
+      };
+      document.getElementById("lsoacheck").onchange = (e) => {
+        setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
+      };
+
+      // Set up the bus stops layer
+      this.map.addSource("naptan_stops", {
+        type: "geojson",
+        data: "/data/naptan_stops.geojson",
+      });
+      this.map.addLayer({
+        id: "naptan_stops_layer",
+        type: "circle",
+        source: "naptan_stops",
+        paint: {
+          "circle-radius": 5,
+          "circle-color": "purple",
+        },
+      });
     });
+    document.getElementById("show-stops").onchange = (e) => {
+      this.map.setLayoutProperty(
+        "naptan_stops_layer",
+        "visibility",
+        e.target.checked ? "visible" : "none"
+      );
+    };
 
     this.map.on("draw.create", (e) => {
       this.#newRoute(e.features[0]);
@@ -122,17 +126,6 @@ export class App {
       this.map.setStyle(
         `https://api.maptiler.com/maps/${e.target.value}/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL`
       );
-    };
-
-    document.getElementById("layer-lsoa").onchange = (e) => {
-      setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
-    };
-    document.getElementById("lsoacheck").onchange = (e) => {
-      setupLSOALayer(this.map, document.getElementById("layer-lsoa").value);
-    };
-
-    document.getElementById("stopscheck").onchange = (e) => {
-      this.#setupStopsLayer();
     };
   }
 
