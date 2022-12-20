@@ -1,4 +1,4 @@
-export async function recalculateScores(feature) {
+export async function recalculateRouteScores(feature) {
   // First we need to snap each of the points to a valid stop
   const endpt = "https://true-swans-flow-34-89-73-233.loca.lt";
 
@@ -32,6 +32,10 @@ export async function recalculateScores(feature) {
   console.log(`Got stops ${stops}`);
 
   return callAPI(feature, stops);
+}
+
+export async function recalculateBuildingScores(feature, purpose, form_value) {
+  alert(`TODO: call api for ${purpose} and ${form_value}`);
 }
 
 async function callAPI(feature, stops) {
