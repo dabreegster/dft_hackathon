@@ -121,6 +121,7 @@ export class App {
 
   #setupChartModal() {
     const modal = document.getElementById("modal");
+
     // When the user clicks on <span> (x), close the modal
     document.getElementsByClassName("close")[0].onclick = () => {
       modal.style.display = "none";
@@ -132,19 +133,22 @@ export class App {
       }
     };
 
-    // How map triggers the modal
-    // On click open modal
+    // Clicking the map opens the modal
     this.map.on("click", "baseline_layer", (e) => {
       if (this.drawControls.getMode() == "simple_select") {
-        // Block Modal when clicking on other layers
-        let f = this.map.queryRenderedFeatures(e.point);
-        f = f.filter(function (el) {
-          return el.source == "baseline";
-        });
-
-        if (f.length == 1) {
+        var baselineObject = null;
+        // Look at everything at the place we clicked
+        for (const x of this.map.queryRenderedFeatures(e.point)) {
+          if (x.source == "baseline") {
+            baselineObject = x;
+          } else if (x.source == "mapbox-gl-draw-hot") {
+            // We just finished drawing something (or are clicking super near it). Don't open the modal.
+            return;
+          }
+        }
+        if (baselineObject) {
           modal.style.display = "block";
-          makeBarChart(e.features[0].properties);
+          makeBarChart(baselineObject.properties);
         }
       }
     });
