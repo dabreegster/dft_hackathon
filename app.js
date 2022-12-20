@@ -1,6 +1,9 @@
 import { makeBarChart } from "./area_summary.js";
 import { loadBaselineData, setupLSOALayer } from "./baseline_lsoa_scores.js";
-import { recalculateScores } from "./call_api.js";
+import {
+  recalculateRouteScores,
+  recalculateBuildingScores,
+} from "./call_api.js";
 import { dropdown } from "./forms.js";
 import { geojsonLength } from "./deps/geojson-length.js";
 
@@ -19,8 +22,12 @@ export class App {
       displayControlsDefault: false,
       controls: {
         line_string: true,
+        polygon: true,
       },
-      styles: [
+      // TODO Disable, because this breaks drawing polygons. We need to do
+      // something like https://github.com/acteng/atip/blob/main/style.js
+      // maybe.
+      /*styles: [
         {
           id: "lines",
           filter: ["==", "$type", "LineString"],
@@ -30,7 +37,7 @@ export class App {
             "line-width": 10,
           },
         },
-      ],
+      ],*/
     });
 
     this.#setupMap();
@@ -97,7 +104,12 @@ export class App {
     };
 
     this.map.on("draw.create", (e) => {
-      this.#newRoute(e.features[0]);
+      const feature = e.features[0];
+      if (feature.geometry.type == "LineString") {
+        this.#newRoute(feature);
+      } else {
+        this.#newBuilding(feature);
+      }
     });
 
     document.getElementById("basemaps").onchange = (e) => {
@@ -166,9 +178,56 @@ export class App {
       e.target.disabled = true;
       e.target.innerText = "Loading...";
       try {
-        this.#handleApiResults(await recalculateScores(feature));
+        this.#handleApiResults(await recalculateRouteScores(feature));
       } catch (err) {
         e.target.innerText = `Error: ${err}`;
+      }
+    };
+  }
+
+  #newBuilding(feature) {
+    var contents = "";
+    contents += `<h2>New building</h2>`;
+    contents += dropdown(feature.properties, "purpose", "Building purpose: ", [
+      "residential",
+      "business",
+      "other",
+    ]);
+    contents += `<div id="building_form"></div>`;
+    document.getElementById("form").innerHTML = contents;
+
+    document.getElementById("purpose").onchange = (e) => {
+      const purpose = e.target.value;
+
+      if (purpose == "") {
+        document.getElementById("building_form").innerHTML = "";
+      } else {
+        var form = makeBuildingForm(purpose);
+        form += `<button type="button" id="recalculate">Recalculate scores</button>`;
+        document.getElementById("building_form").innerHTML = form;
+
+        document.getElementById("recalculate").onclick = async (e) => {
+          const key = {
+            residential: "num_people",
+            business: "num_jobs",
+            other: "square_footage",
+          }[purpose];
+          const form_value = document.getElementById(key).value;
+          if (form_value == "") {
+            alert("Fill out the form first");
+            return;
+          }
+
+          e.target.disabled = true;
+          e.target.innerText = "Loading...";
+          try {
+            this.#handleApiResults(
+              await recalculateBuildingScores(feature, purpose, form_value)
+            );
+          } catch (err) {
+            e.target.innerText = `Error: ${err}`;
+          }
+        };
       }
     };
   }
@@ -244,4 +303,21 @@ function emptyGeojson() {
     type: "FeatureCollection",
     features: [],
   };
+}
+
+// residential, business, other
+function makeBuildingForm(purpose) {
+  if (purpose == "residential") {
+    return `<label for="num_people">Number of people:</label>
+      <input type="number" id="num_people" min="1" max="10000">`;
+  }
+  if (purpose == "business") {
+    return `<label for="num_jobs">Number of jobs:</label>
+    <input type="number" id="num_jobs" min="1" max="1000">`;
+  }
+  if (purpose == "other") {
+    return `<label for="square_footage">Square footage:</label>
+      <input type="number" id="square_footage" min="1" max="100000">`;
+  }
+  throw new Exception(`unknown value ${purpose}`);
 }
