@@ -1,7 +1,25 @@
 import { dropdown } from "./forms.js";
 import { geojsonLength } from "./deps/geojson-length.js";
+import { makeBarChart } from "./area_summary.js";
+import { 
+  findStopsPreApiCall, 
+  callAPI,
+} from "./call_api.js";
+import { 
+  store_feature, 
+  collapse_sidebar,
+  get_newbuild_form_value,
+} from "./store_feature.js";
+import {create_legend} from "./create_legend.js"
+
 
 ("use strict");
+
+
+// initialise global variable to store all user inputs
+var features_all = []
+
+
 
 export class App {
   #makeChartsCon(sub) {
@@ -47,6 +65,7 @@ export class App {
     }
 
     var conctx = document.getElementById("conChart").getContext("2d");
+
 
     conChart = new Chart(conctx, {
       type: "bar",
@@ -112,6 +131,14 @@ export class App {
   }
 
   constructor() {
+
+
+    /// collapse sidebar and create legend on load
+    document.getElementById('sidebar').classList.toggle('collapsed')
+    create_legend()
+
+
+      
     this.map = new maplibregl.Map({
       container: "map",
       style:
@@ -122,6 +149,7 @@ export class App {
       displayControlsDefault: false,
       controls: {
         line_string: true,
+        polygon: true,
       },
       styles: [
         {
@@ -137,39 +165,38 @@ export class App {
     });
 
     this.#setupMap();
+    uploadProcess(this.#handleApiResults);
+    //this.#setupChartModal(); // Comment this line out to prevent bar charts showing on click
 
-    // Modal Popup
-    this.modal = document.getElementById("modal");
-    this.span = document.getElementsByClassName("close")[0];
-    // When the user clicks on <span> (x), close the modal
-    this.span.onclick = function () {
-      modal.style.display = "none";
-    };
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function (event) {
-      if (event.target == modal) {
-        modal.style.display = "none";
+
+
+    // Tooltip: to reflect new LSOA hovered over
+    var hoveredStateId = null;
+    this.map.on('mousemove', 'baseline_layer', function (e) {
+      if (e.features.length > 0) {
+
+          // get LSOA which is now hovered over. 'properties' includes all connectivity scores for that LSOA
+          hoveredStateId = e.features[0].properties.LSOA11CD;
+
+          // change text for the LSOA which is now hovered over
+          document.getElementById("hoverinfo-textbox").innerHTML=(hoveredStateId + '<br>').concat("\n", JSON.stringify(e.features[0].properties).replaceAll(',', '<br>'));
+
       }
-    };
+    })
+    // dropping record of previous LSOA hovered over
+    this.map.on('mouseleave', 'baseline_layer', function () {
 
-    // How map triggers the modal
-    // On click open modal
-    this.map.on("click", "baseline_layer", (e) => {
-      if (this.drawControls.getMode() == "simple_select") {
-        // Block Modal when clicking on other layers
-        let f = this.map.queryRenderedFeatures(e.point);
-        f = f.filter(function (el) {
-          return el.source == "baseline";
-        });
-
-        if (f.length == 1) {
-          modal.style.display = "block";
-          var sub = e.features[0].properties;
-          this.#makeChartsCon(sub);
-        }
-      }
+      // remove text for that LSOA
+      if (hoveredStateId !== null) {
+          document.getElementById("hoverinfo-textbox").textContent = '';
+      } 
+      hoveredStateId = null;
     });
+
+
   }
+
+
 
   #SetupLSOALayer(layerId) {
     var lsoacheckBox = document.getElementById("lsoacheck");
@@ -182,7 +209,6 @@ export class App {
         id: "baseline_layer",
         source: "baseline",
         type: "fill",
-        // From https://github.com/creds2/CarbonCalculator/blob/master/www/js/layer_control.js
         paint: {
           "fill-color": [
             "interpolate",
@@ -266,7 +292,16 @@ export class App {
     });
 
     this.map.on("draw.create", (e) => {
-      this.#newRoute(e.features[0]);
+
+      document.getElementById('sidebar').classList.toggle('collapsed')
+
+      const feature = e.features[0];
+      if (feature.geometry.type == "LineString") {
+        this.#newRoute(feature);
+      } else {
+        this.#newBuilding(feature);
+      }
+
     });
 
     document.getElementById("basemaps").onchange = (e) => {
@@ -288,7 +323,48 @@ export class App {
     };
   }
 
+
+
+  #setupChartModal() {
+    const modal = document.getElementById("modal");
+
+    // When the user clicks on <span> (x), close the modal
+    document.getElementsByClassName("close")[0].onclick = () => {
+      modal.style.display = "none";
+    };
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = (ev) => {
+      if (ev.target == modal) {
+        modal.style.display = "none";
+      }
+    };
+
+    // Clicking the map opens the modal
+    this.map.on("click", "baseline_layer", (e) => {
+      if (this.drawControls.getMode() == "simple_select") {
+        var baselineObject = null;
+        // Look at everything at the place we clicked
+        for (const x of this.map.queryRenderedFeatures(e.point)) {
+          if (x.source == "baseline") {
+            baselineObject = x;
+          } else if (x.source == "mapbox-gl-draw-hot") {
+            // We just finished drawing something (or are clicking super near it). Don't open the modal.
+            return;
+          }
+        }
+        if (baselineObject) {
+          modal.style.display = "block";
+          makeBarChart(baselineObject.properties);
+        }
+      }
+    });
+  }
+
   #newRoute(feature) {
+
+    // 'feature' contains properties as set by the user, and geometry.coordinates: array of lat/long arrays of all points reached
+    // 'features_all' is an array of other routes which have been added so far
+
     const length = Math.round(geojsonLength(feature.geometry));
 
     var contents = "";
@@ -302,112 +378,100 @@ export class App {
     contents += dropdown(
       feature.properties,
       "frequency",
-      "Peak frequency the train (km/h): ",
+      "Peak frequency of the route (number of minutes between each service): ",
       [100, 150, 200]
     );
     contents += `<button type="button" id="recalculate">Recalculate scores</button>`;
+    contents += `<br>`;
+    contents += `<button type="button" id="addanother">Add another route</button>`;
     document.getElementById("form").innerHTML = contents;
 
+
     document.getElementById("recalculate").onclick = async (e) => {
+
+      features_all = store_feature(feature, features_all)
+
       e.target.disabled = true;
       e.target.innerText = "Loading...";
       try {
-        await this.#recalculate(feature);
+        this.#handleApiResults(
+          await recalculateRouteScores(features_all)
+        );
       } catch (err) {
         e.target.innerText = `Error: ${err}`;
       }
     };
-  }
 
-  async #recalculate(feature) {
-    // First we need to snap each of the points to a valid stop
-    const endpt = "https://true-swans-flow-34-89-73-233.loca.lt";
 
-    var stops = [];
-    for (const pt of feature.geometry.coordinates) {
-      const req = {
-        lat_long: [pt[1], pt[0]],
-        acceptable_distance: 1000,
-      };
-      console.log(`Lookup stop ${JSON.stringify(req)}`);
-      const resp = await fetch(endpt, {
-        method: "POST",
-        headers: {
-          "Bypass-Tunnel-Reminder": "haha",
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(req),
-      });
-      const result = await resp.json();
-      if (!result.hasOwnProperty("ATCO")) {
-        throw `Stop lookup broke: ${JSON.stringify(
-          result
-        )} for req ${JSON.stringify(req)}`;
-      }
-
-      stops.push(result["ATCO"]);
-    }
-    console.log(`Got stops ${stops}`);
-
-    return this.#callAPI(feature, stops);
-  }
-
-  async #callAPI(feature, stops) {
-    const realEndpt = "https://thick-humans-tap-34-89-73-233.loca.lt";
-    const dummyEndpt = "https://free-rivers-glow-34-89-73-233.loca.lt";
-
-    const startHours = 8;
-    const dwellTime = 30;
-
-    const dailyTrips = 10;
-
-    var req = {
-      route_number: {},
-      trip_id: {},
-      ATCO: {},
-      stop_sequence: {},
-      arrival_times: {},
-      departure_times: {},
-      TripStartHours: startHours,
-      max_travel_time: 3600,
-      return_home: false,
-      geography_level: "lsoa",
+    document.getElementById("addanother").onclick = async (e) => {
+      features_all = store_feature(feature, features_all)
+      collapse_sidebar()
     };
 
-    var lastTime = 3600 * startHours;
-    for (var i = 0; i < dailyTrips * stops.length; i++) {
-      const key = `${i}`;
+  };
 
-      req.route_number[key] = 0;
-      req.trip_id[key] = Math.floor(i / stops.length);
-      req["ATCO"][key] = stops[i % stops.length];
-      req.stop_sequence[key] = i % stops.length;
-      req.arrival_times[key] = lastTime;
-      req.departure_times[key] = lastTime + dwellTime;
 
-      lastTime += dwellTime;
-      // TODO Time between stops
-      lastTime += 1800;
+
+    #newBuilding(feature) {
+
+
+      /// TODO: extract centroid. Hard coding it for now
+      console.log(feature.geometry.coordinates)
+      var centroid_latlong = [0.1276, 51.5072]
+      feature['centroid_latlong'] = centroid_latlong
+
+
+
+      var contents = "";
+      contents += `<h2>New building</h2>`;
+      contents += dropdown(feature.properties, "purpose", "Building purpose: ", [
+        "residential",
+        "business",
+        "shopping",
+        "leisure",
+        "education",
+      ]);
+      contents += `<div id="building_form"></div>`;
+      document.getElementById("form").innerHTML = contents;
+
+      document.getElementById("purpose").onchange = (e) => {
+        const purpose = e.target.value;
+
+        if (purpose == "") {
+          document.getElementById("building_form").innerHTML = "";
+        } else {
+          var form = makeBuildingForm(purpose);
+          form += `<br>`;
+          form += `<button type="button" id="recalculate">Recalculate scores</button>`;
+          form += `<br>`;
+          form += `<button type="button" id="addanother">Add another route</button>`; 
+          document.getElementById("building_form").innerHTML = form;
+
+          document.getElementById("recalculate").onclick = async (e) => {
+            features_all = store_feature(feature, features_all)
+            e.target.disabled = true;
+            e.target.innerText = "Loading...";
+            try {
+              this.#handleApiResults(
+                await findStopsPreApiCall(features_all)
+              );
+            } catch (err) {
+              e.target.innerText = `Error: ${err}`;
+            }
+          };
+
+          document.getElementById("addanother").onclick = async (e) => {
+            features_all = store_feature(feature, features_all)
+            collapse_sidebar()
+          };
+
+        }
+      };
     }
 
-    console.log(`Make real request ${JSON.stringify(req)}`);
-    const resp = await fetch(realEndpt, {
-      method: "POST",
-      headers: {
-        "Bypass-Tunnel-Reminder": "haha",
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(req),
-    });
-    const data = await resp.json();
 
-    // TODO Could do this once and stash it somewhere
-    const lsoas = await this.#loadLSOAs();
+      
 
-    this.#handleResults(data, lsoas);
-  }
 
   async #loadLSOAs() {
     const resp = await fetch("/data/lsoa_scores.geojson");
@@ -422,7 +486,8 @@ export class App {
     return geojson;
   }
 
-  #handleResults(data, geojson) {
+
+  #handleApiResults(data, geojson) {
     var props_per_lsoa = {};
     for (const feature of geojson.features) {
       const id = feature.properties["LSOA11CD"];
@@ -475,5 +540,167 @@ export class App {
 
     // Gets in the way
     this.map.removeLayer("baseline_layer");
+
+
+    /// TODO: add process to show stats on overall connectivity effects of the new intervention, esp
+    /// 'pop_weighted_score'
+
+
+    /*
+    ## What return from api will look like
+
+    {'pop_weighted_score': 1.0482932671911964,
+     'results_table': {'Business_diff': {'0': 0.40295215722307853,
+       '1': 0.0,
+       '2': 0.0},
+      'Education_diff': {'0': 0.0, '1': 0.0, '2': 0.0},
+      'Entertain / public activity_diff': {'0': 0.0,
+       '1': 1.5637245306633338,
+       '2': 0.0},
+      'Shopping_diff': {'0': 0.570380612904049,
+       '1': 0.0,
+       '2': 0.048947593586917915},
+      'Visit friends at private home_diff': {'0': 0.0,
+       '1': 0.08132333301040305,
+       '2': 0.0},
+      'lsoa': {'0': 'E01024471', '1': 'E01024747', '2': 'E01000680'},
+      'overall_diff': {'0': 0.9733327701271275,
+       '1': 1.645047863673737,
+       '2': 0.048947593586917915}
+       }
+    }
+    */
+
+
+
+
   }
+
+
 }
+
+
+
+/// To deal with file upload
+function uploadProcess(handleApiResults) {
+
+
+
+  /// TODO: change this so it isnt hard coded!
+  const startHours = 8
+
+
+
+  var fileInput = document.getElementById('fileInput');
+
+  // Listen for changes to the file input element
+  fileInput.addEventListener('change', function() {
+
+    // Get the file
+    var file = fileInput.files[0];
+
+    // Create a new FileReader and load file to it as text
+    var reader = new FileReader();
+    reader.readAsText(fileInput.files[0])
+
+
+    // Listen for the 'load' event, which is triggered when the file has been read
+    reader.addEventListener('load', function(e) {
+
+      // Get the file content as a string
+      var csvString = reader.result;
+
+      // Split the CSV string into an array of rows
+      var rows = csvString.split('\n');
+
+      // Loop through the rows and parse the CSV data, ignoring first row which is headers
+      var data = [];
+      for (var i = 1; i < rows.length; i++) {
+        data.push(rows[i].split(','));
+      }
+
+      // making arrays for these
+      const route_numbers = data.map(innerArray => innerArray[0]);
+      const trip_ids = data.map(innerArray => innerArray[1]);
+      const ATCOs = data.map(innerArray => innerArray[2]);
+      const stop_sequences = data.map(innerArray => innerArray[3]);
+      const arrival_times = data.map(innerArray => innerArray[4]);
+      const departure_times = data.map(innerArray => innerArray[5]);
+
+
+      // converting arrays to dictionaries for inputs
+      let route_numbers_dict = {}
+      let trip_ids_dict = {}
+      let ATCOs_dict = {}
+      let stop_sequences_dict = {}
+      let arrival_times_dict = {}
+      let departure_times_dict = {}
+      for (var i = 0; i < route_numbers.length; i++) {
+        route_numbers_dict[i] = route_numbers[i]
+        trip_ids_dict[i] = trip_ids[i]
+        ATCOs_dict[i] = ATCOs[i]
+        stop_sequences_dict[i] = stop_sequences[i]
+        arrival_times_dict[i] = arrival_times[i]
+        departure_times_dict[i] = departure_times[i]
+      }
+
+
+    // initialise request payload
+    var req = {
+      route_number: route_numbers_dict,
+      trip_id: trip_ids_dict,
+      ATCO: ATCOs_dict,
+      stop_sequence: stop_sequences_dict,
+      arrival_times: arrival_times_dict,
+      departure_times: departure_times_dict,
+      TripStartHours: startHours,
+      max_travel_time: 3600,
+      return_home: false,
+      geography_level: "lsoa",
+      new_buildings: "",
+    };
+
+
+    ///// Call api and act on results
+    try {
+      handleApiResults(
+       callAPI(req)
+      );
+    } catch (err) {
+      e.target.innerText = `Error: ${err}`;
+    };
+    });
+
+  });   
+}; 
+
+
+
+// residential, business, other
+function makeBuildingForm(purpose) {
+  if (purpose == "residential") {
+    return `<label for="num_people">Number of people:</label>
+      <input type="number" id="num_people" min="1" max="100000">`;
+  }
+  if (purpose == "business") {
+    return `<label for="num_jobs">Number of jobs:</label>
+    <input type="number" id="num_jobs" min="1" max="10000">`;
+  }
+  if (purpose == "shopping") {
+    return `<label for="square_footage">Square footage:</label>
+      <input type="number" id="square_footage" min="1" max="100000">`;
+  }
+  if (purpose == "leisure") {
+    return `<label for="square_footage">Square footage:</label>
+      <input type="number" id="square_footage" min="1" max="100000">`;
+  }
+  if (purpose == "education") {
+    return `<label for="square_footage">Square footage:</label>
+      <input type="number" id="square_footage" min="1" max="100000">`;
+  }
+  throw new Exception(`unknown value ${purpose}`);
+}
+
+
+
+

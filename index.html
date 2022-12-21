@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="css/layout.css" type="text/css" />
     <link rel="stylesheet" href="css/map_controls.css" type="text/css" />
     <link rel="stylesheet" href="css/modal_popup.css" type="text/css" />
+    <script src="https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js"></script>
+
   </head>
 
   <body>
@@ -32,12 +34,37 @@
     </aside>
 
     <main>
+
+      <h1 style="text-indent: 50px;">Connectivity app</h1>
+
+
+      <input type="file" id="fileInput" accept=".csv" action="/action_page.php" style="text-align: center;border-radius: 50%;border: 2px solid lightblue;  position: absolute;  top: 0;  left: 50%;  transform: translate(-50%, 0); ">
+
       <div id="map">
+
+
+
+
+        <div id="basemaps-wrapper">
+          <select id="basemaps">
+            <option value="streets">Regular map</option>
+            <option value="hybrid">Satellite</option>
+          </select>
+        </div>
+
+
+        <div id="hoverinfo-textbox">
+              <div class="boxed">
+                Hover over an LSOA to see scores!
+              </div>
+        </div>
+        
+
         <div id="layer-toggle">
           <form action="/action_page.php">
             <input type="checkbox" id="lsoacheck" name="lsoacheck" checked>
             <label for="lsoacheck"> LSOAs</label><br>
-            <input type="checkbox" id="stopscheck" name="stopscheck" checked>
+            <input type="checkbox" id="stopscheck" name="stopscheck" >
             <label for="stopscheck"> Stops</label><br>
           </form>
         </div>
@@ -83,31 +110,36 @@
             <option value="overall_visit">overall_visit</option>
           </select>
         </div>
+
       </div>
     </main>
     
+
+    <!-- Bar charts on click of an LSOA -->
     <div id="modal" class="modal">
-      <!-- Modal content -->
       <div class="modal-content">
-      <div class="modal-header">
+        <div class="modal-header">
           <span class="close">&times;</span>
           <div id="modal-title"><h2>Area Summary</h2></div>
-      </div>
-      <div class="modal-body">
-        <p>Chart</p>
-        <div class="chart-container" >
-  			  <canvas id="conChart"></canvas>
-  		  </div>
-        
+        </div>
+        <div class="modal-body">
+          <p>Chart</p>
+          <div class="chart-container">
+            <canvas id="chart-contents"></canvas>
+          </div>
+        </div>
       </div>
       <div class="modal-footer"></div>
-      
     </div>
+    
 
     <script type="module">
+
+
       import { App } from "./app.js";
 
       window.app = new App();
+
     </script>
   </body>
 </html>
