@@ -1,111 +1,61 @@
-  #newBuilding(feature) {
-    /// TODO: extract centroid. Hard coding it for now
-    console.log(feature.geometry.coordinates);
-    var centroid_latlong = [0.1276, 51.5072];
-    feature["centroid_latlong"] = centroid_latlong;
-
-    var contents = "";
-    contents += `<h2>New building</h2>`;
-    contents += dropdown(feature.properties, "purpose", "Building purpose: ", [
-      "residential",
-      "business",
-      "shopping",
-      "leisure",
-      "education",
-    ]);
-    contents += `<div id="building_form"></div>`;
-    document.getElementById("form").innerHTML = contents;
-
-    document.getElementById("purpose").onchange = (e) => {
-      const purpose = e.target.value;
-
-      if (purpose == "") {
-        document.getElementById("building_form").innerHTML = "";
-      } else {
-        var form = makeBuildingForm(purpose);
-        form += `<br>`;
-        form += `<button type="button" id="recalculate">Recalculate scores</button>`;
-        form += `<br>`;
-        form += `<button type="button" id="addanother">Add another route</button>`;
-        document.getElementById("building_form").innerHTML = form;
-
-        document.getElementById("recalculate").onclick = async (e) => {
-          features_all = store_feature(feature, features_all);
-          e.target.disabled = true;
-          e.target.innerText = "Loading...";
-          try {
-            this.#handleApiResults(await findStopsPreApiCall(features_all));
-          } catch (err) {
-            e.target.innerText = `Error: ${err}`;
-          }
-        };
-
-        document.getElementById("addanother").onclick = async (e) => {
-          features_all = store_feature(feature, features_all);
-          collapse_sidebar();
-        };
-      }
+function handleApiResults(data, geojson) {
+  var props_per_lsoa = {};
+  for (const feature of geojson.features) {
+    const id = feature.properties["LSOA11CD"];
+    props_per_lsoa[id] = {
+      LSOA11CD: id,
     };
   }
 
-  #handleApiResults(data, geojson) {
-    var props_per_lsoa = {};
-    for (const feature of geojson.features) {
-      const id = feature.properties["LSOA11CD"];
-      props_per_lsoa[id] = {
-        LSOA11CD: id,
-      };
+  var min = Number.MAX_VALUE;
+  var max = Number.MIN_VALUE;
+
+  // Go through and fill out properties in the LSOA polygons
+  for (const purpose of [
+    "Business",
+    "Education",
+    "Entertain / public activity",
+    "Shopping",
+    "Visit friends at private home",
+    "overall",
+  ]) {
+    for (const [key, value] of Object.entries(data[`${purpose}_diff`])) {
+      const lsoa = data.lsoa[key];
+      props_per_lsoa[lsoa][purpose] = value;
+      min = Math.min(min, value);
+      max = Math.max(max, value);
     }
+  }
 
-    var min = Number.MAX_VALUE;
-    var max = Number.MIN_VALUE;
+  console.log(JSON.stringify(props_per_lsoa));
+  console.log(`Diff ranges from ${min} to ${max}`);
 
-    // Go through and fill out properties in the LSOA polygons
-    for (const purpose of [
-      "Business",
-      "Education",
-      "Entertain / public activity",
-      "Shopping",
-      "Visit friends at private home",
-      "overall",
-    ]) {
-      for (const [key, value] of Object.entries(data[`${purpose}_diff`])) {
-        const lsoa = data.lsoa[key];
-        props_per_lsoa[lsoa][purpose] = value;
-        min = Math.min(min, value);
-        max = Math.max(max, value);
-      }
-    }
+  for (const feature of geojson.features) {
+    const id = feature.properties["LSOA11CD"];
+    feature.properties = props_per_lsoa[id];
+  }
 
-    console.log(JSON.stringify(props_per_lsoa));
-    console.log(`Diff ranges from ${min} to ${max}`);
+  this.map.getSource("after").setData(geojson);
 
-    for (const feature of geojson.features) {
-      const id = feature.properties["LSOA11CD"];
-      feature.properties = props_per_lsoa[id];
-    }
+  this.map.addLayer({
+    id: "after_layer",
+    source: "after",
+    type: "fill",
+    paint: {
+      "fill-color": "green",
+      "fill-opacity": ["get", "overall"],
+      "fill-outline-color": "black",
+      "fill-opacity": 0.5,
+    },
+  });
 
-    this.map.getSource("after").setData(geojson);
+  // Gets in the way
+  this.map.removeLayer("baseline_layer");
 
-    this.map.addLayer({
-      id: "after_layer",
-      source: "after",
-      type: "fill",
-      paint: {
-        "fill-color": "green",
-        "fill-opacity": ["get", "overall"],
-        "fill-outline-color": "black",
-        "fill-opacity": 0.5,
-      },
-    });
+  /// TODO: add process to show stats on overall connectivity effects of the new intervention, esp
+  /// 'pop_weighted_score'
 
-    // Gets in the way
-    this.map.removeLayer("baseline_layer");
-
-    /// TODO: add process to show stats on overall connectivity effects of the new intervention, esp
-    /// 'pop_weighted_score'
-
-    /*
+  /*
     ## What return from api will look like
 
     {'pop_weighted_score': 1.0482932671911964,
@@ -129,7 +79,7 @@
        }
     }
     */
-  }
+}
 
 /// To deal with file upload
 function uploadProcess(handleApiResults) {
@@ -208,29 +158,4 @@ function uploadProcess(handleApiResults) {
       }
     });
   });
-}
-
-// residential, business, other
-function makeBuildingForm(purpose) {
-  if (purpose == "residential") {
-    return `<label for="num_people">Number of people:</label>
-      <input type="number" id="num_people" min="1" max="100000">`;
-  }
-  if (purpose == "business") {
-    return `<label for="num_jobs">Number of jobs:</label>
-    <input type="number" id="num_jobs" min="1" max="10000">`;
-  }
-  if (purpose == "shopping") {
-    return `<label for="square_footage">Square footage:</label>
-      <input type="number" id="square_footage" min="1" max="100000">`;
-  }
-  if (purpose == "leisure") {
-    return `<label for="square_footage">Square footage:</label>
-      <input type="number" id="square_footage" min="1" max="100000">`;
-  }
-  if (purpose == "education") {
-    return `<label for="square_footage">Square footage:</label>
-      <input type="number" id="square_footage" min="1" max="100000">`;
-  }
-  throw new Exception(`unknown value ${purpose}`);
 }
