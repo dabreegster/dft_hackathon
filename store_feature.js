@@ -1,32 +1,27 @@
 // Store data on thing added
 export function store_feature(feature, features_all) {
-  console.log(features_all)
+  console.log(features_all);
   try {
-    feature['speed'] = document.getElementById('speed').value
-    feature['frequency'] = document.getElementById('frequency').value
-    feature['type'] = 'service'
-  } catch(e) {
-    let purpose = document.getElementById("purpose").value
-    feature['type'] = 'newbuild'
-    feature['form_value'] = get_newbuild_form_value(purpose)
-    feature['purpose'] = purpose
+    feature["speed"] = document.getElementById("speed").value;
+    feature["frequency"] = document.getElementById("frequency").value;
+    feature["type"] = "service";
+  } catch (e) {
+    let purpose = document.getElementById("purpose").value;
+    feature["type"] = "newbuild";
+    feature["form_value"] = get_newbuild_form_value(purpose);
+    feature["purpose"] = purpose;
   }
 
   // add feature to features_all
   features_all.push(feature);
 
-  return features_all
+  return features_all;
 }
-
-
 
 export function collapse_sidebar() {
-  document.getElementById('sidebar').classList.toggle('collapsed')
-  document.getElementById("form").innerHTML = ""
+  document.getElementById("sidebar").classList.toggle("collapsed");
+  document.getElementById("form").innerHTML = "";
 }
-
-
-
 
 export function get_newbuild_form_value(purpose) {
   const key = {
@@ -41,6 +36,6 @@ export function get_newbuild_form_value(purpose) {
     alert("Fill out the form first");
     return;
   } else {
-    return form_value
+    return form_value;
   }
 }

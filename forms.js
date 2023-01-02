@@ -13,4 +13,3 @@ export function dropdown(props, key, label, values) {
   html += `</div>`;
   return html;
 }
-

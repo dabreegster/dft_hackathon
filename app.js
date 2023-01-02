@@ -1,25 +1,18 @@
 import { dropdown } from "./forms.js";
 import { geojsonLength } from "./deps/geojson-length.js";
 import { makeBarChart } from "./area_summary.js";
-import { 
-  findStopsPreApiCall, 
-  callAPI,
-} from "./call_api.js";
-import { 
-  store_feature, 
+import { findStopsPreApiCall, callAPI } from "./call_api.js";
+import {
+  store_feature,
   collapse_sidebar,
   get_newbuild_form_value,
 } from "./store_feature.js";
-import {create_legend} from "./create_legend.js"
-
+import { create_legend } from "./create_legend.js";
 
 ("use strict");
 
-
 // initialise global variable to store all user inputs
-var features_all = []
-
-
+var features_all = [];
 
 export class App {
   #makeChartsCon(sub) {
@@ -65,7 +58,6 @@ export class App {
     }
 
     var conctx = document.getElementById("conChart").getContext("2d");
-
 
     conChart = new Chart(conctx, {
       type: "bar",
@@ -131,14 +123,10 @@ export class App {
   }
 
   constructor() {
-
-
     /// collapse sidebar and create legend on load
-    document.getElementById('sidebar').classList.toggle('collapsed')
-    create_legend()
+    document.getElementById("sidebar").classList.toggle("collapsed");
+    create_legend();
 
-
-      
     this.map = new maplibregl.Map({
       container: "map",
       style:
@@ -168,35 +156,31 @@ export class App {
     uploadProcess(this.#handleApiResults);
     //this.#setupChartModal(); // Comment this line out to prevent bar charts showing on click
 
-
-
     // Tooltip: to reflect new LSOA hovered over
     var hoveredStateId = null;
-    this.map.on('mousemove', 'baseline_layer', function (e) {
+    this.map.on("mousemove", "baseline_layer", function (e) {
       if (e.features.length > 0) {
+        // get LSOA which is now hovered over. 'properties' includes all connectivity scores for that LSOA
+        hoveredStateId = e.features[0].properties.LSOA11CD;
 
-          // get LSOA which is now hovered over. 'properties' includes all connectivity scores for that LSOA
-          hoveredStateId = e.features[0].properties.LSOA11CD;
-
-          // change text for the LSOA which is now hovered over
-          document.getElementById("hoverinfo-textbox").innerHTML=(hoveredStateId + '<br>').concat("\n", JSON.stringify(e.features[0].properties).replaceAll(',', '<br>'));
-
+        // change text for the LSOA which is now hovered over
+        document.getElementById("hoverinfo-textbox").innerHTML = (
+          hoveredStateId + "<br>"
+        ).concat(
+          "\n",
+          JSON.stringify(e.features[0].properties).replaceAll(",", "<br>")
+        );
       }
-    })
+    });
     // dropping record of previous LSOA hovered over
-    this.map.on('mouseleave', 'baseline_layer', function () {
-
+    this.map.on("mouseleave", "baseline_layer", function () {
       // remove text for that LSOA
       if (hoveredStateId !== null) {
-          document.getElementById("hoverinfo-textbox").textContent = '';
-      } 
+        document.getElementById("hoverinfo-textbox").textContent = "";
+      }
       hoveredStateId = null;
     });
-
-
   }
-
-
 
   #SetupLSOALayer(layerId) {
     var lsoacheckBox = document.getElementById("lsoacheck");
@@ -292,8 +276,7 @@ export class App {
     });
 
     this.map.on("draw.create", (e) => {
-
-      document.getElementById('sidebar').classList.toggle('collapsed')
+      document.getElementById("sidebar").classList.toggle("collapsed");
 
       const feature = e.features[0];
       if (feature.geometry.type == "LineString") {
@@ -301,7 +284,6 @@ export class App {
       } else {
         this.#newBuilding(feature);
       }
-
     });
 
     document.getElementById("basemaps").onchange = (e) => {
@@ -322,8 +304,6 @@ export class App {
       this.#SetupstopsLayer();
     };
   }
-
-
 
   #setupChartModal() {
     const modal = document.getElementById("modal");
@@ -361,7 +341,6 @@ export class App {
   }
 
   #newRoute(feature) {
-
     // 'feature' contains properties as set by the user, and geometry.coordinates: array of lat/long arrays of all points reached
     // 'features_all' is an array of other routes which have been added so far
 
@@ -386,92 +365,73 @@ export class App {
     contents += `<button type="button" id="addanother">Add another route</button>`;
     document.getElementById("form").innerHTML = contents;
 
-
     document.getElementById("recalculate").onclick = async (e) => {
-
-      features_all = store_feature(feature, features_all)
+      features_all = store_feature(feature, features_all);
 
       e.target.disabled = true;
       e.target.innerText = "Loading...";
       try {
-        this.#handleApiResults(
-          await recalculateRouteScores(features_all)
-        );
+        this.#handleApiResults(await recalculateRouteScores(features_all));
       } catch (err) {
         e.target.innerText = `Error: ${err}`;
       }
     };
 
-
     document.getElementById("addanother").onclick = async (e) => {
-      features_all = store_feature(feature, features_all)
-      collapse_sidebar()
+      features_all = store_feature(feature, features_all);
+      collapse_sidebar();
     };
+  }
 
-  };
+  #newBuilding(feature) {
+    /// TODO: extract centroid. Hard coding it for now
+    console.log(feature.geometry.coordinates);
+    var centroid_latlong = [0.1276, 51.5072];
+    feature["centroid_latlong"] = centroid_latlong;
 
+    var contents = "";
+    contents += `<h2>New building</h2>`;
+    contents += dropdown(feature.properties, "purpose", "Building purpose: ", [
+      "residential",
+      "business",
+      "shopping",
+      "leisure",
+      "education",
+    ]);
+    contents += `<div id="building_form"></div>`;
+    document.getElementById("form").innerHTML = contents;
 
+    document.getElementById("purpose").onchange = (e) => {
+      const purpose = e.target.value;
 
-    #newBuilding(feature) {
+      if (purpose == "") {
+        document.getElementById("building_form").innerHTML = "";
+      } else {
+        var form = makeBuildingForm(purpose);
+        form += `<br>`;
+        form += `<button type="button" id="recalculate">Recalculate scores</button>`;
+        form += `<br>`;
+        form += `<button type="button" id="addanother">Add another route</button>`;
+        document.getElementById("building_form").innerHTML = form;
 
+        document.getElementById("recalculate").onclick = async (e) => {
+          features_all = store_feature(feature, features_all);
+          e.target.disabled = true;
+          e.target.innerText = "Loading...";
+          try {
+            this.#handleApiResults(await findStopsPreApiCall(features_all));
+          } catch (err) {
+            e.target.innerText = `Error: ${err}`;
+          }
+        };
 
-      /// TODO: extract centroid. Hard coding it for now
-      console.log(feature.geometry.coordinates)
-      var centroid_latlong = [0.1276, 51.5072]
-      feature['centroid_latlong'] = centroid_latlong
-
-
-
-      var contents = "";
-      contents += `<h2>New building</h2>`;
-      contents += dropdown(feature.properties, "purpose", "Building purpose: ", [
-        "residential",
-        "business",
-        "shopping",
-        "leisure",
-        "education",
-      ]);
-      contents += `<div id="building_form"></div>`;
-      document.getElementById("form").innerHTML = contents;
-
-      document.getElementById("purpose").onchange = (e) => {
-        const purpose = e.target.value;
-
-        if (purpose == "") {
-          document.getElementById("building_form").innerHTML = "";
-        } else {
-          var form = makeBuildingForm(purpose);
-          form += `<br>`;
-          form += `<button type="button" id="recalculate">Recalculate scores</button>`;
-          form += `<br>`;
-          form += `<button type="button" id="addanother">Add another route</button>`; 
-          document.getElementById("building_form").innerHTML = form;
-
-          document.getElementById("recalculate").onclick = async (e) => {
-            features_all = store_feature(feature, features_all)
-            e.target.disabled = true;
-            e.target.innerText = "Loading...";
-            try {
-              this.#handleApiResults(
-                await findStopsPreApiCall(features_all)
-              );
-            } catch (err) {
-              e.target.innerText = `Error: ${err}`;
-            }
-          };
-
-          document.getElementById("addanother").onclick = async (e) => {
-            features_all = store_feature(feature, features_all)
-            collapse_sidebar()
-          };
-
-        }
-      };
-    }
-
-
-      
-
+        document.getElementById("addanother").onclick = async (e) => {
+          features_all = store_feature(feature, features_all);
+          collapse_sidebar();
+        };
+      }
+    };
+  }
 
   async #loadLSOAs() {
     const resp = await fetch("/data/lsoa_scores.geojson");
@@ -485,7 +445,6 @@ export class App {
     }
     return geojson;
   }
-
 
   #handleApiResults(data, geojson) {
     var props_per_lsoa = {};
@@ -512,7 +471,7 @@ export class App {
         const lsoa = data.lsoa[key];
         props_per_lsoa[lsoa][purpose] = value;
         min = Math.min(min, value);
-        max = Math.max(max, value)
+        max = Math.max(max, value);
       }
     }
 
@@ -541,10 +500,8 @@ export class App {
     // Gets in the way
     this.map.removeLayer("baseline_layer");
 
-
     /// TODO: add process to show stats on overall connectivity effects of the new intervention, esp
     /// 'pop_weighted_score'
-
 
     /*
     ## What return from api will look like
@@ -570,111 +527,87 @@ export class App {
        }
     }
     */
-
-
-
-
   }
-
-
 }
-
-
 
 /// To deal with file upload
 function uploadProcess(handleApiResults) {
-
-
-
   /// TODO: change this so it isnt hard coded!
-  const startHours = 8
+  const startHours = 8;
 
-
-
-  var fileInput = document.getElementById('fileInput');
+  var fileInput = document.getElementById("fileInput");
 
   // Listen for changes to the file input element
-  fileInput.addEventListener('change', function() {
-
+  fileInput.addEventListener("change", function () {
     // Get the file
     var file = fileInput.files[0];
 
     // Create a new FileReader and load file to it as text
     var reader = new FileReader();
-    reader.readAsText(fileInput.files[0])
-
+    reader.readAsText(fileInput.files[0]);
 
     // Listen for the 'load' event, which is triggered when the file has been read
-    reader.addEventListener('load', function(e) {
-
+    reader.addEventListener("load", function (e) {
       // Get the file content as a string
       var csvString = reader.result;
 
       // Split the CSV string into an array of rows
-      var rows = csvString.split('\n');
+      var rows = csvString.split("\n");
 
       // Loop through the rows and parse the CSV data, ignoring first row which is headers
       var data = [];
       for (var i = 1; i < rows.length; i++) {
-        data.push(rows[i].split(','));
+        data.push(rows[i].split(","));
       }
 
       // making arrays for these
-      const route_numbers = data.map(innerArray => innerArray[0]);
-      const trip_ids = data.map(innerArray => innerArray[1]);
-      const ATCOs = data.map(innerArray => innerArray[2]);
-      const stop_sequences = data.map(innerArray => innerArray[3]);
-      const arrival_times = data.map(innerArray => innerArray[4]);
-      const departure_times = data.map(innerArray => innerArray[5]);
-
+      const route_numbers = data.map((innerArray) => innerArray[0]);
+      const trip_ids = data.map((innerArray) => innerArray[1]);
+      const ATCOs = data.map((innerArray) => innerArray[2]);
+      const stop_sequences = data.map((innerArray) => innerArray[3]);
+      const arrival_times = data.map((innerArray) => innerArray[4]);
+      const departure_times = data.map((innerArray) => innerArray[5]);
 
       // converting arrays to dictionaries for inputs
-      let route_numbers_dict = {}
-      let trip_ids_dict = {}
-      let ATCOs_dict = {}
-      let stop_sequences_dict = {}
-      let arrival_times_dict = {}
-      let departure_times_dict = {}
+      let route_numbers_dict = {};
+      let trip_ids_dict = {};
+      let ATCOs_dict = {};
+      let stop_sequences_dict = {};
+      let arrival_times_dict = {};
+      let departure_times_dict = {};
       for (var i = 0; i < route_numbers.length; i++) {
-        route_numbers_dict[i] = route_numbers[i]
-        trip_ids_dict[i] = trip_ids[i]
-        ATCOs_dict[i] = ATCOs[i]
-        stop_sequences_dict[i] = stop_sequences[i]
-        arrival_times_dict[i] = arrival_times[i]
-        departure_times_dict[i] = departure_times[i]
+        route_numbers_dict[i] = route_numbers[i];
+        trip_ids_dict[i] = trip_ids[i];
+        ATCOs_dict[i] = ATCOs[i];
+        stop_sequences_dict[i] = stop_sequences[i];
+        arrival_times_dict[i] = arrival_times[i];
+        departure_times_dict[i] = departure_times[i];
       }
 
+      // initialise request payload
+      var req = {
+        route_number: route_numbers_dict,
+        trip_id: trip_ids_dict,
+        ATCO: ATCOs_dict,
+        stop_sequence: stop_sequences_dict,
+        arrival_times: arrival_times_dict,
+        departure_times: departure_times_dict,
+        TripStartHours: startHours,
+        max_travel_time: 3600,
+        return_home: false,
+        geography_level: "lsoa",
+        new_buildings: "",
+      };
 
-    // initialise request payload
-    var req = {
-      route_number: route_numbers_dict,
-      trip_id: trip_ids_dict,
-      ATCO: ATCOs_dict,
-      stop_sequence: stop_sequences_dict,
-      arrival_times: arrival_times_dict,
-      departure_times: departure_times_dict,
-      TripStartHours: startHours,
-      max_travel_time: 3600,
-      return_home: false,
-      geography_level: "lsoa",
-      new_buildings: "",
-    };
-
-
-    ///// Call api and act on results
-    try {
-      handleApiResults(
-       callAPI(req)
-      );
-    } catch (err) {
-      e.target.innerText = `Error: ${err}`;
-    };
+      ///// Call api and act on results
+      try {
+        handleApiResults(callAPI(req));
+      } catch (err) {
+        e.target.innerText = `Error: ${err}`;
+      }
     });
-
-  });   
-}; 
-
-
+  });
+}
 
 // residential, business, other
 function makeBuildingForm(purpose) {
@@ -700,7 +633,3 @@ function makeBuildingForm(purpose) {
   }
   throw new Exception(`unknown value ${purpose}`);
 }
-
-
-
-
