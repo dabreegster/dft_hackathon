@@ -38,26 +38,7 @@
       }
     }
   }
-
-  function onKeydown(e) {
-    const id = $currentlyEditing;
-    if (e.key == "Delete") {
-      const tag = e.originalTarget.tagName;
-      // Let the delete key work in forms
-      if (tag != "CANVAS" && tag != "BODY") {
-        return;
-      }
-      e.preventDefault();
-
-      gjScheme.update((gj) => {
-        gj.features = gj.features.filter((f) => f.id != id);
-        return gj;
-      });
-    }
-  }
 </script>
-
-<svelte:window on:keydown={onKeydown} />
 
 <Accordion>
   {#each $gjScheme.features as feature, i}
