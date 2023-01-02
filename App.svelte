@@ -8,6 +8,7 @@
   import EditingLayer from "./components/EditingLayer.svelte";
   import BaseScoreLayer from "./components/BaseScoreLayer.svelte";
   import StopsLayer from "./components/StopsLayer.svelte";
+  import ScoreLegend from "./components/ScoreLegend.svelte";
 </script>
 
 <Layout>
@@ -27,6 +28,6 @@
     </Map>
   </div>
   <div slot="right">
-    <h2>Legend</h2>
+    <ScoreLegend />
   </div>
 </Layout>
