@@ -1,0 +1,24 @@
+{
+  "name": "dft_connectivity",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "fmt": "prettier --write *.html *.js *.svelte components/*"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^2.0.0",
+    "vite": "^4.0.0"
+  },
+  "dependencies": {
+    "@mapbox/geojson-extent": "^1.0.1",
+    "@mapbox/mapbox-gl-draw": "^1.3.0",
+    "carbon-components-svelte": "^0.70.13",
+    "carbon-icons-svelte": "^11.4.0",
+    "maplibre-gl": "^2.4.0",
+    "svelte": "^3.54.0"
+  }
+}
