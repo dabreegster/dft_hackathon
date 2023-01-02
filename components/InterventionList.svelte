@@ -61,7 +61,9 @@
           id={feature.id}
           bind:name={feature.properties.name}
           bind:purpose={feature.properties.purpose}
-          <
+          bind:num_people={feature.properties.num_people}
+          bind:num_jobs={feature.properties.num_jobs}
+          bind:square_meters={feature.properties.square_meters}
         />
       {/if}
     </AccordionItem>
