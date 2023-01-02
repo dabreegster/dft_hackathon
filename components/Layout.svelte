@@ -11,6 +11,7 @@
 <style>
   div {
     float: left;
+    padding: 8px;
   }
 
   .left {
