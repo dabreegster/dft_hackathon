@@ -11,7 +11,7 @@
 </script>
 
 <Layout>
-  <div slot="sidebar">
+  <div slot="left">
     <h1>Connectivity prototype</h1>
     <EntireScheme />
     <br />
@@ -25,5 +25,8 @@
       <BaseScoreLayer />
       <StopsLayer />
     </Map>
+  </div>
+  <div slot="right">
+    <h2>Legend</h2>
   </div>
 </Layout>
