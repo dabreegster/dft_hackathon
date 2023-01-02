@@ -4,9 +4,7 @@
   import { gjScheme, clearCurrentlyEditing } from "../stores.js";
 
   export let id;
-  export let name;
-  export let speed;
-  export let frequency;
+  export let props;
 
   function remove() {
     gjScheme.update((gj) => {
@@ -16,17 +14,19 @@
   }
 </script>
 
-<TextInput labelText="Name" bind:value={name} />
+<p>Route length: {Math.ceil(props.lengthKm)}km</p>
+
+<TextInput labelText="Name" bind:value={props.name} />
 
 <br />
 
-<NumberInput label="Speed of the train (km/h)" bind:value={speed} />
+<NumberInput label="Speed of the train (km/h)" bind:value={props.speed} />
 
 <br />
 
 <NumberInput
   label="Peak frequency of the train (minutes)"
-  bind:value={frequency}
+  bind:value={props.frequency}
 />
 
 <br />

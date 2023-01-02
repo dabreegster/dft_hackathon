@@ -9,11 +9,7 @@
   import { gjScheme, clearCurrentlyEditing } from "../stores.js";
 
   export let id;
-  export let name;
-  export let purpose;
-  export let num_people;
-  export let num_jobs;
-  export let square_meters;
+  export let props;
 
   function remove() {
     gjScheme.update((gj) => {
@@ -23,11 +19,11 @@
   }
 </script>
 
-<TextInput labelText="Name" bind:value={name} />
+<TextInput labelText="Name" bind:value={props.name} />
 
 <br />
 
-<Select labelText="Purpose" bind:selected={purpose}>
+<Select labelText="Purpose" bind:selected={props.purpose}>
   <SelectItem text="Residential" value="residential" />
   <SelectItem text="Business" value="business" />
   <SelectItem text="Shopping" value="shopping" />
@@ -37,14 +33,17 @@
 
 <br />
 
-{#if purpose == "residential"}
-  <NumberInput label="Number of people to live here" bind:value={num_people} />
-{:else if purpose == "business"}
-  <NumberInput label="Number of jobs" bind:value={num_jobs} />
+{#if props.purpose == "residential"}
+  <NumberInput
+    label="Number of people to live here"
+    bind:value={props.num_people}
+  />
+{:else if props.purpose == "business"}
+  <NumberInput label="Number of jobs" bind:value={props.num_jobs} />
 {:else}
   <NumberInput
     label="Total square meters of floor-space"
-    bind:value={square_meters}
+    bind:value={props.areaSquareMeters}
   />
 {/if}
 

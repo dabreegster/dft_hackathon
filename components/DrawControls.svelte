@@ -1,5 +1,8 @@
 <script>
   import MapboxDraw from "@mapbox/mapbox-gl-draw";
+  import length from "@turf/length";
+  import centroid from "@turf/centroid";
+  import area from "@turf/area";
   import {
     isPoint,
     drawCircle,
@@ -67,7 +70,7 @@
     map.on("draw.create", (e) => {
       // Assume there's exactly 1 feature
       const feature = e.features[0];
-
+      addGeometricProperties(feature);
       gjScheme.update((gj) => {
         gj.features.push(feature);
         return gj;
@@ -77,11 +80,13 @@
     map.on("draw.update", (e) => {
       // Assume there's exactly 1 feature
       const feature = e.features[0];
+      addGeometricProperties(feature);
 
       gjScheme.update((gj) => {
         const update = gj.features.find((f) => f.id == feature.id);
-        // Only geometry updates happen, not properties
         update.geometry = feature.geometry;
+        // Overwrite any geometric properties
+        update.properties = { ...update.properties, ...feature.properties };
         return gj;
       });
     });
@@ -123,6 +128,15 @@
       }
     });
   });
+
+  function addGeometricProperties(feature) {
+    if (feature.geometry.type == "LineString") {
+      feature.properties.lengthKm = length(feature.geometry);
+    } else {
+      feature.properties.centroid = centroid(feature.geometry);
+      feature.properties.areaSquareMeters = area(feature.geometry);
+    }
+  }
 </script>
 
 <style>

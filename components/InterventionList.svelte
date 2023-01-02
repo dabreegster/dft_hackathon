@@ -50,21 +50,9 @@
         {/if}
       </svelte:fragment>
       {#if feature.geometry.type == "LineString"}
-        <RouteForm
-          id={feature.id}
-          bind:name={feature.properties.name}
-          bind:speed={feature.properties.speed}
-          bind:frequency={feature.properties.frequency}
-        />
+        <RouteForm id={feature.id} bind:props={feature.properties} />
       {:else}
-        <BuildingForm
-          id={feature.id}
-          bind:name={feature.properties.name}
-          bind:purpose={feature.properties.purpose}
-          bind:num_people={feature.properties.num_people}
-          bind:num_jobs={feature.properties.num_jobs}
-          bind:square_meters={feature.properties.square_meters}
-        />
+        <BuildingForm id={feature.id} bind:props={feature.properties} />
       {/if}
     </AccordionItem>
   {/each}
