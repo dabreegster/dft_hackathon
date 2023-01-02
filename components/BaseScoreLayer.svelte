@@ -8,6 +8,8 @@
   const source = "baseline";
   const layer = "baseline_layer";
 
+  export let hoveredAreaScores;
+
   let scoreLayer = "overall";
 
   onMount(() => {
@@ -16,6 +18,15 @@
       data: geojsonUrl,
     });
     setLayer();
+
+    map.on("mousemove", layer, function (e) {
+      if (e.features.length > 0) {
+        hoveredAreaScores = e.features[0].properties;
+      }
+    });
+    map.on("mouseleave", layer, function (e) {
+      hoveredAreaScores = null;
+    });
   });
 
   function setLayer() {

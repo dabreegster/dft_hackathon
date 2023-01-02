@@ -12,16 +12,32 @@
     "#2166ac",
     "#053061",
   ];
+
+  export let hoveredAreaScores;
 </script>
 
-{#each colors as color, i}
-  <div style="background-color: {color}">
-    &gt; {i * 10}
-  </div>
-{/each}
+<div class="legend">
+  {#each colors as color, i}
+    <div class="square" style="background-color: {color}">
+      &gt; {i * 10}
+    </div>
+  {/each}
+</div>
+
+{#if hoveredAreaScores}
+  {#each Object.entries(hoveredAreaScores) as [key, value]}
+    <p>{key} = {value}</p>
+  {/each}
+{:else}
+  <p>Hover on area to see scores</p>
+{/if}
 
 <style>
-  div {
+  .legend {
+    display: flex;
+  }
+
+  .square {
     width: 50px;
     height: 50px;
     color: white;
