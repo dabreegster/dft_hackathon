@@ -6,6 +6,7 @@
   import EntireScheme from "./components/EntireScheme.svelte";
   import HoverLayer from "./components/HoverLayer.svelte";
   import EditingLayer from "./components/EditingLayer.svelte";
+  import BaseScoreLayer from "./components/BaseScoreLayer.svelte";
 </script>
 
 <Layout>
@@ -20,6 +21,7 @@
       <DrawControls />
       <HoverLayer />
       <EditingLayer />
+      <BaseScoreLayer />
     </Map>
   </div>
 </Layout>
