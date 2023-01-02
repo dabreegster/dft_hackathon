@@ -7,6 +7,7 @@
   import HoverLayer from "./components/HoverLayer.svelte";
   import EditingLayer from "./components/EditingLayer.svelte";
   import BaseScoreLayer from "./components/BaseScoreLayer.svelte";
+  import StopsLayer from "./components/StopsLayer.svelte";
 </script>
 
 <Layout>
@@ -22,6 +23,7 @@
       <HoverLayer />
       <EditingLayer />
       <BaseScoreLayer />
+      <StopsLayer />
     </Map>
   </div>
 </Layout>
