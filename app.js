@@ -1,29 +1,3 @@
-    // Tooltip: to reflect new LSOA hovered over
-    var hoveredStateId = null;
-    this.map.on("mousemove", "baseline_layer", function (e) {
-      if (e.features.length > 0) {
-        // get LSOA which is now hovered over. 'properties' includes all connectivity scores for that LSOA
-        hoveredStateId = e.features[0].properties.LSOA11CD;
-
-        // change text for the LSOA which is now hovered over
-        document.getElementById("hoverinfo-textbox").innerHTML = (
-          hoveredStateId + "<br>"
-        ).concat(
-          "\n",
-          JSON.stringify(e.features[0].properties).replaceAll(",", "<br>")
-        );
-      }
-    });
-    // dropping record of previous LSOA hovered over
-    this.map.on("mouseleave", "baseline_layer", function () {
-      // remove text for that LSOA
-      if (hoveredStateId !== null) {
-        document.getElementById("hoverinfo-textbox").textContent = "";
-      }
-      hoveredStateId = null;
-    });
-
-
   #newBuilding(feature) {
     /// TODO: extract centroid. Hard coding it for now
     console.log(feature.geometry.coordinates);

@@ -9,6 +9,8 @@
   import BaseScoreLayer from "./components/BaseScoreLayer.svelte";
   import StopsLayer from "./components/StopsLayer.svelte";
   import ScoreLegend from "./components/ScoreLegend.svelte";
+
+  let hoveredAreaScores;
 </script>
 
 <Layout>
@@ -23,11 +25,11 @@
       <DrawControls />
       <HoverLayer />
       <EditingLayer />
-      <BaseScoreLayer />
+      <BaseScoreLayer bind:hoveredAreaScores />
       <StopsLayer />
     </Map>
   </div>
   <div slot="right">
-    <ScoreLegend />
+    <ScoreLegend {hoveredAreaScores} />
   </div>
 </Layout>
