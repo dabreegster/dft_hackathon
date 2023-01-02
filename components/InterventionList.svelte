@@ -1,6 +1,7 @@
 <script>
   import { Accordion, AccordionItem } from "carbon-components-svelte";
-  import Form from "./Form.svelte";
+  import BuildingForm from "./BuildingForm.svelte";
+  import RouteForm from "./RouteForm.svelte";
   import {
     gjScheme,
     currentSidebarHover,
@@ -12,17 +13,10 @@
     if (feature.properties.name) {
       return feature.properties.name;
     }
-    var noun = feature.properties.intervention_type;
-    if (noun == "other") {
-      if (feature.geometry.type == "Point") {
-        noun = "point";
-      } else if (feature.geometry.type == "LineString") {
-        noun = "line";
-      } else {
-        noun = "polygon";
-      }
+    if (feature.geometry.type == "LineString") {
+      return "Untitled route";
     }
-    return `Untitled ${noun}`;
+    return "Untitle building";
   }
 
   // TODO Not sure why we can't inline this one below
@@ -55,12 +49,21 @@
           {i + 1}) {interventionName(feature)}
         {/if}
       </svelte:fragment>
-      <Form
-        id={feature.id}
-        bind:name={feature.properties.name}
-        bind:intervention_type={feature.properties.intervention_type}
-        bind:description={feature.properties.description}
-      />
+      {#if feature.geometry.type == "LineString"}
+        <RouteForm
+          id={feature.id}
+          bind:name={feature.properties.name}
+          bind:speed={feature.properties.speed}
+          bind:frequency={feature.properties.frequency}
+        />
+      {:else}
+        <BuildingForm
+          id={feature.id}
+          bind:name={feature.properties.name}
+          bind:purpose={feature.properties.purpose}
+          <
+        />
+      {/if}
     </AccordionItem>
   {/each}
 </Accordion>
