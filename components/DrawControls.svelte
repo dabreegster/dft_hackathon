@@ -26,11 +26,6 @@
   const lineWidth = 10;
   const styles = [
     {
-      id: "base-points",
-      filter: ["all", isPoint, ["==", "meta", "feature"]],
-      ...drawCircle(color, circleRadius),
-    },
-    {
       id: "draggable-points",
       filter: ["all", isPoint, ["!=", "meta", "feature"]],
       // TODO The 1.5 is bulky and ugly, but I can't figure out how to get z-ordering working
@@ -61,7 +56,7 @@
     drawControls = new MapboxDraw({
       displayControlsDefault: false,
       controls: {
-        point: true,
+        line_string: true,
         polygon: true,
       },
       styles: styles,
@@ -72,13 +67,6 @@
     map.on("draw.create", (e) => {
       // Assume there's exactly 1 feature
       const feature = e.features[0];
-
-      // Seed one property
-      if (feature.geometry.type == "Polygon") {
-        feature.properties.intervention_type = "area";
-      } else {
-        feature.properties.intervention_type = "other";
-      }
 
       gjScheme.update((gj) => {
         gj.features.push(feature);
@@ -129,12 +117,9 @@
     currentlyEditing.subscribe((id) => {
       if (id) {
         let feature = $gjScheme.features.find((f) => f.id == id);
-        // Act like we've selected the object. (This is irrelevant for points.)
-        if (feature.geometry.type != "Point") {
-          drawControls.changeMode("direct_select", {
-            featureId: feature.id,
-          });
-        }
+        drawControls.changeMode("direct_select", {
+          featureId: feature.id,
+        });
       }
     });
   });
@@ -146,11 +131,7 @@
     height: 60px;
   }
 
-  :global(
-      .mapbox-gl-draw_polygon,
-      .mapbox-gl-draw_point,
-      .mapbox-gl-draw_line
-    ) {
+  :global(.mapbox-gl-draw_polygon, .mapbox-gl-draw_line) {
     background-size: 50px;
   }
 </style>
