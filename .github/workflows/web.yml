@@ -10,13 +10,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build web app
-        run: |
-                mkdir publish
-                cp -Rv *.html *.js css deps publish
+      - name: Install node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.x
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run build --if-present
 
       - name: Publish
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./publish/
+          publish_dir: ./dist/
