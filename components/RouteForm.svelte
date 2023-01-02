@@ -1,17 +1,12 @@
 <script>
-  import {
-    RadioButtonGroup,
-    RadioButton,
-    TextArea,
-    TextInput,
-  } from "carbon-components-svelte";
+  import { NumberInput, TextInput } from "carbon-components-svelte";
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import { gjScheme, clearCurrentlyEditing } from "../stores.js";
 
   export let id;
   export let name;
-  export let intervention_type;
-  export let description;
+  export let speed;
+  export let frequency;
 
   function remove() {
     gjScheme.update((gj) => {
@@ -25,16 +20,14 @@
 
 <br />
 
-<RadioButtonGroup bind:selected={intervention_type}>
-  <RadioButton labelText="Area" value="area" />
-  <RadioButton labelText="Route" value="route" />
-  <RadioButton labelText="Crossing" value="crossing" />
-  <RadioButton labelText="Other" value="other" />
-</RadioButtonGroup>
+<NumberInput label="Speed of the train (km/h)" bind:value={speed} />
 
 <br />
 
-<TextArea labelText="Description" bind:value={description} />
+<NumberInput
+  label="Peak frequency of the train (minutes)"
+  bind:value={frequency}
+/>
 
 <br />
 
