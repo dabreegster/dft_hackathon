@@ -24,7 +24,7 @@
         hoveredAreaScores = e.features[0].properties;
       }
     });
-    map.on("mouseleave", layer, function (e) {
+    map.on("mouseleave", layer, function () {
       hoveredAreaScores = null;
     });
   });

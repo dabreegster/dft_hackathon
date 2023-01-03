@@ -34,7 +34,7 @@
       loaded = true;
     });
 
-    const resizeObserver = new ResizeObserver((entries) => {
+    const resizeObserver = new ResizeObserver(() => {
       map.resize();
     });
     resizeObserver.observe(mapContainer);

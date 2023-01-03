@@ -3,12 +3,7 @@
   import BuildingForm from "./BuildingForm.svelte";
   import RouteForm from "./RouteForm.svelte";
   import DebugApi from "./DebugApi.svelte";
-  import {
-    gjScheme,
-    currentSidebarHover,
-    currentMapHover,
-    currentlyEditing,
-  } from "../stores.js";
+  import { gjScheme, currentSidebarHover, currentMapHover } from "../stores.js";
   import { geojsonToApiPayload, callApi } from "../api.js";
 
   let requestJson;

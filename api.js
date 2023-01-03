@@ -2,12 +2,14 @@ const useFakeApi = true;
 
 const stopLookupEndpt = "https://cuddly-islands-stick-34-89-73-233.loca.lt";
 const stopSnapDistance = 1000;
-const realConnectivityEndpt = "https://thick-humans-tap-34-89-73-233.loca.lt";
+//const realConnectivityEndpt = "https://thick-humans-tap-34-89-73-233.loca.lt";
 const dummyConnectivityEndpt = "https://moody-weeks-peel-34-89-73-233.loca.lt";
 
 // Takes the GeoJSON features and creates the API request. Has the side effect
 // of calling the stop lookup API.
 export async function geojsonToApiPayload(features) {
+  await lookupStops(features);
+
   // time in hours the first service starts
   const startHours = 8;
   // seconds waiting at stop
@@ -51,8 +53,8 @@ export async function geojsonToApiPayload(features) {
       let stops = feature.properties["stop_ATCOs"];
 
       // TODO: factor in speed and frequency to make the route
-      let speed = feature.properties.speed;
-      let frequency = feature.properties.frequency;
+      //let speed = feature.properties.speed;
+      //let frequency = feature.properties.frequency;
 
       var lastTime = 3600 * startHours;
       for (let i = 0; i < dailyTrips * stops.length; i++) {
@@ -117,7 +119,7 @@ async function lookupStops(features) {
         });
       }
       const result = await resp.json();
-      if (!result.hasOwnProperty("ATCO")) {
+      if (!Object.prototype.hasOwnProperty.call(result, "ATCO")) {
         throw `Stop lookup broke: ${JSON.stringify(
           result
         )} for req ${JSON.stringify(req)}`;
