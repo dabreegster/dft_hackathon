@@ -23,7 +23,7 @@
     map.addControl(new ScaleControl());
     map.addControl(new NavigationControl(), "bottom-right");
 
-    if (!setCamera) {
+    if (setCamera) {
       map.jumpTo({
         center: [-0.47, 52.879],
         zoom: 6,
