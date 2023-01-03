@@ -10,7 +10,6 @@
   function toggleRequest() {
     openResponse = false;
     openRequest = !openRequest;
-    console.log(`hey, ${openRequest}`);
   }
   function toggleResponse() {
     openRequest = false;

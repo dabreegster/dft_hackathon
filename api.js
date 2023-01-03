@@ -1,3 +1,5 @@
+const useFakeApi = true;
+
 const stopLookupEndpt = "https://cuddly-islands-stick-34-89-73-233.loca.lt";
 const stopSnapDistance = 1000;
 const realConnectivityEndpt = "https://thick-humans-tap-34-89-73-233.loca.lt";
@@ -74,13 +76,16 @@ export async function geojsonToApiPayload(features) {
 
 // Takes a payload from geojsonToApiPayload and returns the response
 export async function callApi(req) {
+  if (useFakeApi) {
+    return await fakeConnectivityApi();
+  }
+
   const resp = await fetch(dummyConnectivityEndpt, {
     method: "POST",
     headers: jsonRequestHeaders(),
     body: JSON.stringify(req),
   });
-  const data = await resp.json();
-  return data;
+  return await resp.json();
 }
 
 // Modify features representing new PT routes by looking up ATC0 codes of
@@ -101,11 +106,16 @@ async function lookupStops(features) {
       };
       console.log(`Lookup stop ${JSON.stringify(req)}`);
 
-      const resp = await fetch(stopLookupEndpt, {
-        method: "POST",
-        headers: jsonRequestHeaders(),
-        body: JSON.stringify(req),
-      });
+      let resp;
+      if (useFakeApi) {
+        resp = await fakeStopsApi();
+      } else {
+        resp = await fetch(stopLookupEndpt, {
+          method: "POST",
+          headers: jsonRequestHeaders(),
+          body: JSON.stringify(req),
+        });
+      }
       const result = await resp.json();
       if (!result.hasOwnProperty("ATCO")) {
         throw `Stop lookup broke: ${JSON.stringify(
@@ -127,4 +137,43 @@ function jsonRequestHeaders() {
     Accept: "application/json",
     "Content-Type": "application/json",
   };
+}
+
+async function fakeStopsApi() {
+  await sleep(500);
+  return { ATCO: "fake ATC0 code" };
+}
+
+async function fakeConnectivityApi() {
+  await sleep(500);
+  return {
+    pop_weighted_score: 1.0482932671911964,
+    results_table: {
+      Business_diff: { 0: 0.40295215722307853, 1: 0.0, 2: 0.0 },
+      Education_diff: { 0: 0.0, 1: 0.0, 2: 0.0 },
+      "Entertain / public activity_diff": {
+        0: 0.0,
+        1: 1.5637245306633338,
+        2: 0.0,
+      },
+      Shopping_diff: { 0: 0.570380612904049, 1: 0.0, 2: 0.048947593586917915 },
+      "Visit friends at private home_diff": {
+        0: 0.0,
+        1: 0.08132333301040305,
+        2: 0.0,
+      },
+      lsoa: { 0: "E01024471", 1: "E01024747", 2: "E01000680" },
+      overall_diff: {
+        0: 0.9733327701271275,
+        1: 1.645047863673737,
+        2: 0.048947593586917915,
+      },
+    },
+  };
+}
+
+async function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }

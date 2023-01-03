@@ -133,31 +133,6 @@ function handleApiResults(data, geojson) {
 
   /// TODO: add process to show stats on overall connectivity effects of the new intervention, esp
   /// 'pop_weighted_score'
-
-  /*
-    ## What return from api will look like
-
-    {'pop_weighted_score': 1.0482932671911964,
-     'results_table': {'Business_diff': {'0': 0.40295215722307853,
-       '1': 0.0,
-       '2': 0.0},
-      'Education_diff': {'0': 0.0, '1': 0.0, '2': 0.0},
-      'Entertain / public activity_diff': {'0': 0.0,
-       '1': 1.5637245306633338,
-       '2': 0.0},
-      'Shopping_diff': {'0': 0.570380612904049,
-       '1': 0.0,
-       '2': 0.048947593586917915},
-      'Visit friends at private home_diff': {'0': 0.0,
-       '1': 0.08132333301040305,
-       '2': 0.0},
-      'lsoa': {'0': 'E01024471', '1': 'E01024747', '2': 'E01000680'},
-      'overall_diff': {'0': 0.9733327701271275,
-       '1': 1.645047863673737,
-       '2': 0.048947593586917915}
-       }
-    }
-    */
 }
 
 // Returns the baseline GeoJSON data and also a dictionary from LSOA ID to geometry
