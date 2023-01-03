@@ -2,12 +2,17 @@
   import { Accordion, AccordionItem } from "carbon-components-svelte";
   import BuildingForm from "./BuildingForm.svelte";
   import RouteForm from "./RouteForm.svelte";
+  import DebugApi from "./DebugApi.svelte";
   import {
     gjScheme,
     currentSidebarHover,
     currentMapHover,
     currentlyEditing,
   } from "../stores.js";
+  import { geojsonToApiPayload, callApi } from "../api.js";
+
+  let requestJson;
+  let responseJson;
 
   function interventionName(feature) {
     if (feature.properties.name) {
@@ -16,7 +21,7 @@
     if (feature.geometry.type == "LineString") {
       return "Untitled route";
     }
-    return "Untitle building";
+    return "Untitled building";
   }
 
   // TODO Not sure why we can't inline this one below
@@ -31,6 +36,12 @@
         return;
       }
     }
+  }
+
+  // TODO Disable the button and show loading state
+  async function recalculate() {
+    requestJson = await geojsonToApiPayload($gjScheme.features);
+    responseJson = await callApi(requestJson);
   }
 </script>
 
@@ -57,3 +68,10 @@
     </AccordionItem>
   {/each}
 </Accordion>
+
+<button
+  type="button"
+  disabled={$gjScheme.features.length == 0}
+  on:click={recalculate}>Recalculate scores</button
+>
+<DebugApi {requestJson} {responseJson} />

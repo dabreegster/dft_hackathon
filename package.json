@@ -20,7 +20,6 @@
     "@turf/centroid": "^6.5.0",
     "@turf/length": "^6.5.0",
     "carbon-components-svelte": "^0.70.13",
-    "carbon-icons-svelte": "^11.4.0",
     "maplibre-gl": "^2.4.0",
     "svelte": "^3.54.0"
   }

@@ -1,6 +1,5 @@
 <script>
   import { NumberInput, TextInput } from "carbon-components-svelte";
-  import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import { gjScheme, clearCurrentlyEditing } from "../stores.js";
 
   export let id;
