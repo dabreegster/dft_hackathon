@@ -1,145 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>DfT connectivity hackathon prototype</title>
+    <meta charset="UTF-8" />
     <meta
       name="viewport"
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
     />
-    <script src="deps/maplibre-gl.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
-    <script src="deps/geojson-extent.js"></script>
-    <script src="deps/mapbox-gl-draw.js"></script>
-    <link href="deps/maplibre-gl.css" rel="stylesheet" />
-    <link rel="stylesheet" href="deps/mapbox-gl-draw.css" type="text/css" />
-    <link rel="stylesheet" href="css/layout.css" type="text/css" />
-    <link rel="stylesheet" href="css/map_controls.css" type="text/css" />
-    <link rel="stylesheet" href="css/modal_popup.css" type="text/css" />
-    <script src="https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js"></script>
-
+    <title>DfT connectivity hackathon prototype</title>
+    <script type="module" crossorigin src="/dft_hackathon/assets/index-1d94bdb3.js"></script>
+    <link rel="stylesheet" href="/dft_hackathon/assets/index-9d304107.css">
   </head>
-
   <body>
-    <aside id="sidebar">
-      <div class="sidebar-content content-container">
-        <div id="form"></div>
-      </div>
-
-      <div
-        class="sidebar-toggle rounded-rect"
-        onclick="document.getElementById('sidebar').classList.toggle('collapsed'); app.map.resize();"
-      >
-        &rarr;
-      </div>
-    </aside>
-
-    <main>
-
-      <h1 style="text-indent: 50px;">Connectivity app</h1>
-
-
-      <input type="file" id="fileInput" accept=".csv" action="/action_page.php" style="text-align: center;border-radius: 50%;border: 2px solid lightblue;  position: absolute;  top: 0;  left: 50%;  transform: translate(-50%, 0); ">
-
-      <div id="map">
-
-
-
-
-        <div id="basemaps-wrapper">
-          <select id="basemaps">
-            <option value="streets">Regular map</option>
-            <option value="hybrid">Satellite</option>
-          </select>
-        </div>
-
-
-        <div id="hoverinfo-textbox">
-              <div class="boxed">
-                Hover over an LSOA to see scores!
-              </div>
-        </div>
-        
-
-        <div id="layer-toggle">
-          <form action="/action_page.php">
-            <input type="checkbox" id="lsoacheck" name="lsoacheck" checked>
-            <label for="lsoacheck"> LSOAs</label><br>
-            <input type="checkbox" id="stopscheck" name="stopscheck" >
-            <label for="stopscheck"> Stops</label><br>
-          </form>
-        </div>
-        
-        <div id="basemaps-wrapper">
-          <select id="basemaps">
-            <option value="streets">Regular map</option>
-            <option value="hybrid">Satellite</option>
-          </select>
-        </div>
-        
-        <div id="layer-select">
-          <select id="layer-lsoa">
-            <option value="Education_car">Education_car</option>  
-            <option value="Business_car">Business_car</option>  
-            <option value="Shopping_car">Shopping_car</option>  
-            <option value="Education_walk">Education_walk</option>  
-            <option value="Business_pt">Business_pt</option>  
-            <option value="Education_pt">Education_pt</option>  
-            <option value="Visit_friends_at_private_home_car">Visit_friends_at_private_home_car</option>  
-            <option value="Entertain_public_activity_car">Entertain_public_activity_car</option>  
-            <option value="Business_walk">Business_walk</option>  
-            <option value="Shopping_walk">Shopping_walk</option>  
-            <option value="Business_cycling">Business_cycling</option>  
-            <option value="Education_cycling">Education_cycling</option>  
-            <option value="Shopping_pt">Shopping_pt</option>  
-            <option value="Entertain_public_activity_pt">Entertain_public_activity_pt</option>  
-            <option value="Visit_friends_at_private_home_pt">Visit_friends_at_private_home_pt</option>  
-            <option value="Shopping_cycling">Shopping_cycling</option>  
-            <option value="Entertain_public_activity_walk">Entertain_public_activity_walk</option>  
-            <option value="Visit_friends_at_private_home_walk">Visit_friends_at_private_home_walk</option>  
-            <option value="Entertain_public_activity_cycling">Entertain_public_activity_cycling</option>  
-            <option value="Visit_friends_at_private_home_cycling">Visit_friends_at_private_home_cycling</option>  
-            <option value="overall" selected>overall</option>  
-            <option value="overall_walk">overall_walk</option>  
-            <option value="overall_car">overall_car</option>  
-            <option value="overall_cycling">overall_cycling</option>  
-            <option value="overall_pt">overall_pt</option>  
-            <option value="overall_business">overall_business</option>  
-            <option value="overall_education">overall_education</option>  
-            <option value="overall_entertain">overall_entertain</option>  
-            <option value="overall_shopping">overall_shopping</option>  
-            <option value="overall_visit">overall_visit</option>
-          </select>
-        </div>
-
-      </div>
-    </main>
+    <div id="app"></div>
     
-
-    <!-- Bar charts on click of an LSOA -->
-    <div id="modal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <span class="close">&times;</span>
-          <div id="modal-title"><h2>Area Summary</h2></div>
-        </div>
-        <div class="modal-body">
-          <p>Chart</p>
-          <div class="chart-container">
-            <canvas id="chart-contents"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer"></div>
-    </div>
-    
-
-    <script type="module">
-
-
-      import { App } from "./app.js";
-
-      window.app = new App();
-
-    </script>
   </body>
 </html>
