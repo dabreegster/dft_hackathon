@@ -1,4 +1,3 @@
 *.swp
 *.DS_Store
-data/lsoa_scores.geojson
 node_modules
