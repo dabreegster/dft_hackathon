@@ -1,9 +1,9 @@
-const useFakeApi = true;
+const useFakeApi = false;
 
-const stopLookupEndpt = "https://cuddly-islands-stick-34-89-73-233.loca.lt";
+const stopLookupEndpt = "https://shaggy-papers-mate-34-89-73-233.loca.lt";
 const stopSnapDistance = 1000;
-//const realConnectivityEndpt = "https://thick-humans-tap-34-89-73-233.loca.lt";
-const dummyConnectivityEndpt = "https://moody-weeks-peel-34-89-73-233.loca.lt";
+const realConnectivityEndpt = "https://fast-squids-grin-34-89-73-233.loca.lt";
+//const dummyConnectivityEndpt = "https://khaki-places-marry-34-89-73-233.loca.lt";
 
 // Takes the GeoJSON features and creates the API request. Has the side effect
 // of calling the stop lookup API.
@@ -19,20 +19,25 @@ export async function geojsonToApiPayload(features) {
   // seconds between each service
   const timeBetweenStops = 1800;
 
-  // Fill out this request payload
-  let req = {
+  // Fill out this new routes dictionary
+  let new_routes = {
     route_number: {},
     trip_id: {},
     ATCO: {},
     stop_sequence: {},
     arrival_times: {},
     departure_times: {},
+  };
+  // Fill out this request payload
+  let req = {
+    new_routes_dict: new_routes,
     TripStartHours: startHours,
     max_travel_time: 3600,
     return_home: false,
     geography_level: "lsoa",
     new_buildings: [],
   };
+
 
   for (let feature of features) {
     if (feature.geometry.type == "Polygon") {
@@ -45,7 +50,7 @@ export async function geojsonToApiPayload(features) {
 
       req.new_buildings.push([
         feature.properties.purpose,
-        feature.properties.centroid,
+        feature.properties.centroid.geometry.coordinates,
         value,
       ]);
     } else {
@@ -59,20 +64,19 @@ export async function geojsonToApiPayload(features) {
       var lastTime = 3600 * startHours;
       for (let i = 0; i < dailyTrips * stops.length; i++) {
         // Use an increasing key based on all routes
-        const key = Object.keys(req.route_number).length;
+        const key = Object.keys(req.new_routes_dict.route_number).length;
 
-        req.route_number[key] = 0;
-        req.trip_id[key] = Math.floor(i / stops.length);
-        req["ATCO"][key] = stops[i % stops.length];
-        req.stop_sequence[key] = i % stops.length;
-        req.arrival_times[key] = lastTime;
-        req.departure_times[key] = lastTime + dwellTime;
+        req.new_routes_dict.route_number[key] = 0;
+        req.new_routes_dict.trip_id[key] = Math.floor(i / stops.length);
+        req.new_routes_dict["ATCO"][key] = stops[i % stops.length];
+        req.new_routes_dict.stop_sequence[key] = i % stops.length;
+        req.new_routes_dict.arrival_times[key] = lastTime;
+        req.new_routes_dict.departure_times[key] = lastTime + dwellTime;
 
         lastTime += dwellTime + timeBetweenStops;
       }
     }
   }
-
   return req;
 }
 
@@ -82,7 +86,7 @@ export async function callApi(req) {
     return await fakeConnectivityApi();
   }
 
-  const resp = await fetch(dummyConnectivityEndpt, {
+  const resp = await fetch(realConnectivityEndpt, {
     method: "POST",
     headers: jsonRequestHeaders(),
     body: JSON.stringify(req),
@@ -137,6 +141,7 @@ function jsonRequestHeaders() {
     // TODO Re-evaluate why/if this is needed
     "Bypass-Tunnel-Reminder": "haha",
     Accept: "application/json",
+    "Access-Control-Allow-Origin": "*",
     "Content-Type": "application/json",
   };
 }
