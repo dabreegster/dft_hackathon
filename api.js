@@ -50,7 +50,7 @@ export async function geojsonToApiPayload(features) {
       ]);
     } else {
       // Make the payload for a new PT service
-      let stops = feature.properties["stop_ATCOs"];
+      let stops = feature["stop_ATCOs"];
 
       // TODO: factor in speed and frequency to make the route
       //let speed = feature.properties.speed;
