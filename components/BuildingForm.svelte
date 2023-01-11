@@ -23,21 +23,21 @@
 <br />
 
 <Select labelText="Purpose" bind:selected={props.purpose}>
-  <SelectItem text="Residential" value="residential" />
-  <SelectItem text="Business" value="business" />
-  <SelectItem text="Shopping" value="shopping" />
-  <SelectItem text="Leisure" value="leisure" />
-  <SelectItem text="Education" value="education" />
+  <SelectItem text="Residential" value="Residential" />
+  <SelectItem text="Business" value="Business" />
+  <SelectItem text="Shopping" value="Shopping" />
+  <SelectItem text="Leisure" value="Leisure" />
+  <SelectItem text="Education" value="Education" />
 </Select>
 
 <br />
 
-{#if props.purpose == "residential"}
+{#if props.purpose == "Residential"}
   <NumberInput
     label="Number of people to live here"
     bind:value={props.num_people}
   />
-{:else if props.purpose == "business"}
+{:else if props.purpose == "Business"}
   <NumberInput label="Number of jobs" bind:value={props.num_jobs} />
 {:else}
   <NumberInput
