@@ -4,6 +4,73 @@
 
   const prefix = "dft_connectivity";
 
+
+
+
+  function parseUploadedCSV(csvString, startHours){
+
+    // Split the CSV string into an array of rows
+    var rows = csvString.split("\n");
+
+    // Loop through the rows and parse the CSV data, ignoring first row which is headers
+    var data = [];
+    for (var i = 1; i < rows.length; i++) {
+      data.push(rows[i].split(","));
+    }
+
+    // making arrays for these
+    const route_numbers = data.map((innerArray) => innerArray[0]);
+    const trip_ids = data.map((innerArray) => innerArray[1]);
+    const ATCOs = data.map((innerArray) => innerArray[2]);
+    const stop_sequences = data.map((innerArray) => innerArray[3]);
+    const arrival_times = data.map((innerArray) => innerArray[4]);
+    const departure_times = data.map((innerArray) => innerArray[5]);
+
+    // converting arrays to dictionaries for inputs
+    let route_numbers_dict = {};
+    let trip_ids_dict = {};
+    let ATCOs_dict = {};
+    let stop_sequences_dict = {};
+    let arrival_times_dict = {};
+    let departure_times_dict = {};
+    for (var i = 0; i < route_numbers.length; i++) {
+      route_numbers_dict[i] = route_numbers[i];
+      trip_ids_dict[i] = trip_ids[i];
+      ATCOs_dict[i] = ATCOs[i];
+      stop_sequences_dict[i] = stop_sequences[i];
+      arrival_times_dict[i] = arrival_times[i];
+      departure_times_dict[i] = departure_times[i];
+    }
+
+
+    //console.log('route_numbers_dict')
+    //console.log(route_numbers_dict)
+
+    // initialise request payload
+    var req = {
+      route_number: route_numbers_dict,
+      trip_id: trip_ids_dict,
+      ATCO: ATCOs_dict,
+      stop_sequence: stop_sequences_dict,
+      arrival_times: arrival_times_dict,
+      departure_times: departure_times_dict,
+      TripStartHours: startHours,
+      max_travel_time: 3600,
+      return_home: false,
+      geography_level: "lsoa",
+      new_buildings: "",
+    };
+
+    //console.log('req')
+    //console.log(req)
+
+    console.log('json processed')  
+    
+    let req_out = emptyGeojson()
+    req_out.features.push(req)
+    return req_out
+  }
+
   // Set up local storage sync
   let loadLocal = window.localStorage.getItem(prefix);
   if (loadLocal) {
@@ -50,20 +117,23 @@
     document.body.removeChild(element);
   }
 
+
   function loadFile(e) {
+    console.log('loading...')
     const reader = new FileReader();
-    // TODO No await? :(
-    // TODO Should we prompt before deleting the current scheme?
-    reader.onload = (e) => {
-      try {
-        gjScheme.set(JSON.parse(e.target.result));
-      } catch (err) {
-        console.log(`Couldn't load from a file: ${err}`);
-        window.alert(`Couldn't load scheme from a file: ${err}`);
-      }
-    };
     reader.readAsText(e.target.files[0]);
-  }
+    reader.addEventListener("load", function (e) {
+      let startHours = 8.0;
+      let newval = parseUploadedCSV(reader.result, startHours);
+      
+  
+      gjScheme.set(newval);
+      console.log('gjScheme updated:')
+      console.log(gjScheme)
+      console.log(newval)
+  })};
+
+
 </script>
 
 <div>
@@ -86,6 +156,7 @@
       Load from GeoJSON
     </button>
   </label>
+
   <button type="button" class="align-right" on:click={exportToGeojson}>
     Export to GeoJSON
   </button>
