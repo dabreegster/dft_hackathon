@@ -1,8 +1,8 @@
 const useFakeApi = false;
 
-const stopLookupEndpt = "https://shaggy-papers-mate-34-89-73-233.loca.lt";
+const stopLookupEndpt = "https://silent-clocks-jump-34-89-73-233.loca.lt";
 const stopSnapDistance = 1000;
-const realConnectivityEndpt = "https://fast-squids-grin-34-89-73-233.loca.lt";
+const realConnectivityEndpt = "https://bright-bags-bow-34-89-73-233.loca.lt";
 //const dummyConnectivityEndpt = "https://khaki-places-marry-34-89-73-233.loca.lt";
 
 // Takes the GeoJSON features and creates the API request. Has the side effect
@@ -42,9 +42,9 @@ export async function geojsonToApiPayload(features) {
   for (let feature of features) {
     if (feature.geometry.type == "Polygon") {
       let value = feature.areaSquareMeters;
-      if (feature.properties.purpose == "residential") {
+      if (feature.properties.purpose == "Residential") {
         value = feature.properties.num_people;
-      } else if (feature.properties.purpose == "business") {
+      } else if (feature.properties.purpose == "Business") {
         value = feature.properties.num_jobs;
       }
 
