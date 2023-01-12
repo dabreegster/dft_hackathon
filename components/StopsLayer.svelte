@@ -34,7 +34,7 @@
 </script>
 
 <div>
-  Show NAPTAN stops: <input
+  Show NaPTAN stops: <input
     type="checkbox"
     bind:checked={show}
     on:change={toggle}
