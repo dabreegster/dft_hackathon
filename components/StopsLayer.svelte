@@ -1,5 +1,5 @@
 <script>
-  import geojsonUrl from "../data/naptan_stops.geojson?url";
+  import geojsonUrl from "../data/PT_stops_for_app.geojson?url";
   import { onMount, getContext } from "svelte";
 
   const { getMap } = getContext("map");
