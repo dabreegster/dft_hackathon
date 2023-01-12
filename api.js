@@ -1,9 +1,10 @@
 const useFakeApi = false;
+const useDummyApi = true;
 
-const stopLookupEndpt = "https://silent-clocks-jump-34-89-73-233.loca.lt";
+const stopLookupEndpt = "https://slimy-ghosts-tan-34-89-73-233.loca.lt";
 const stopSnapDistance = 1000;
-const realConnectivityEndpt = "https://bright-bags-bow-34-89-73-233.loca.lt";
-//const dummyConnectivityEndpt = "https://khaki-places-marry-34-89-73-233.loca.lt";
+const realConnectivityEndpt = "https://famous-bikes-taste-34-89-73-233.loca.lt";
+const dummyConnectivityEndpt = "https://fresh-ghosts-say-34-89-73-233.loca.lt";
 
 // Takes the GeoJSON features and creates the API request. Has the side effect
 // of calling the stop lookup API.
@@ -84,6 +85,15 @@ export async function geojsonToApiPayload(features) {
 export async function callApi(req) {
   if (useFakeApi) {
     return await fakeConnectivityApi();
+  }
+
+  if (useDummyApi) {
+    const resp = await fetch(dummyConnectivityEndpt, {
+      method: "POST",
+      headers: jsonRequestHeaders(),
+      body: JSON.stringify(req),
+    });
+    return await resp.json();
   }
 
   const resp = await fetch(realConnectivityEndpt, {
