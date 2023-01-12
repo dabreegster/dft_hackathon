@@ -1,12 +1,12 @@
 <script>
-  import geojsonUrl from "../data/PT_stops_for_app.geojson?url";
+  import geojsonUrl from "../data/stops_for_app_all_PT.geojson?url";
   import { onMount, getContext } from "svelte";
 
   const { getMap } = getContext("map");
   const map = getMap();
 
-  const source = "naptan_stops";
-  const layer = "naptan_stops_layer";
+  const source = "all_stops";
+  const layer = "all_stops_layer";
 
   let show = false;
 
